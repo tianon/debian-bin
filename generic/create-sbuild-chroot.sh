@@ -2,31 +2,52 @@
 set -e
 
 suite="$1"
-[ "$suite" ] || { echo >&2 "usage: $0 suite"; exit 1; }
+shift || { echo >&2 "usage: $0 suite [arch]"; exit 1; }
 
-arch="$(dpkg --print-architecture)"
+targetSuite="$suite"
+case "$targetSuite" in
+	experimental) suite='unstable' ;;
+	rc-buggy) suite='sid' ;;
+esac
+
+hostArch="$(dpkg --print-architecture)"
+arch="${1:-"$hostArch"}"
 schroot="$suite-$arch-sbuild"
+targetSchroot="$targetSuite-$arch-sbuild"
+mirror='http://httpredir.debian.org/debian'
 
-dir="$(mktemp --tmpdir --directory "sbuild-createchroot.${suite}.XXXXXXXXXX")"
+tarball="${targetSuite}.tar.gz"
+if [ "$arch" != "$hostArch" ]; then
+	tarball="${targetSuite}-${arch}.tar.gz"
+fi
+tarball="$HOME/$tarball"
+
+dir="$(mktemp --tmpdir --directory "sbuild-createchroot.${targetSchroot}.XXXXXXXXXX")"
+trap "sudo rm -rf '$dir'" EXIT
 
 sudo rm -vf "/etc/schroot/chroot.d/$schroot-"*
 sudo sbuild-createchroot \
-	--make-sbuild-tarball="/home/tianon/schroots/$suite.tar.gz" \
+	--make-sbuild-tarball="${tarball}" \
 	--arch="$arch" \
 	--include=eatmydata \
 	"$suite" \
 	"$dir" \
-	http://httpredir.debian.org/debian
+	"$mirror"
 
-sudo mv "/etc/schroot/chroot.d/$schroot-"* "/etc/schroot/chroot.d/$schroot"
+sudo mv -v "/etc/schroot/chroot.d/$schroot-"* "/etc/schroot/chroot.d/$targetSchroot"
+if [ "$schroot" != "$targetSchroot" ]; then
+	sudo sed -i "s!$schroot!$targetSchroot!g" "/etc/schroot/chroot.d/$targetSchroot"
+	schroot="$targetSchroot"
+fi
 {
 	echo 'source-root-groups=root,sbuild'
 	echo 'command-prefix=eatmydata'
 } | sudo tee -a "/etc/schroot/chroot.d/$schroot"
 
-session="$suite-$$-$RANDOM-$RANDOM"
+session="$targetSuite-$$-$RANDOM-$RANDOM"
 schroot -c "source:$schroot" -b -n "$session"
 trap "schroot -c '$session' -e" EXIT
+# it doesn't matter that we override the previous EXIT trap here because the directory it was removing was already deleted if we successfully get this far by sbuild-createchroot itself
 
 _cmd() {
 	schroot -c "$session" -r -u root -d / -- "$@"
@@ -37,11 +58,22 @@ echo 'APT::Get::Show-Versions "1";' | _cmd tee /etc/apt/apt.conf.d/verbose
 echo 'Acquire::PDiffs "false";' | _cmd tee /etc/apt/apt.conf.d/no-pdiffs
 
 # add incoming where appropriate
-case "$suite" in
-	experimental|rc-buggy|unstable|sid|*-backports{,-sloppy}|*-proposed-updates|*-lts)
-		echo "deb http://incoming.debian.org/debian-buildd buildd-$suite main" | _cmd tee /etc/apt/sources.list.d/incoming.list
-		;;
-esac
+_incoming() {
+	local dist="$1"
+	case "$1" in
+		experimental|rc-buggy|unstable|sid|*-backports{,-sloppy}|*-proposed-updates|*-lts)
+			echo "deb http://incoming.debian.org/debian-buildd buildd-$1 main" | _cmd tee "/etc/apt/sources.list.d/incoming-${1}.list"
+			;;
+	esac
+}
+
+_incoming "$suite"
+
+if [ "$suite" != "$targetSuite" ]; then
+	_incoming "$targetSuite"
+	echo "deb $mirror $targetSuite main" | _cmd tee -a /etc/apt/sources.list
+	suite="$targetSuite"
+fi
 
 # sbuild-update -udcar
 _cmd sh -ec '
