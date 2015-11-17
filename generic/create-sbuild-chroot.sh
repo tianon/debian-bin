@@ -20,7 +20,7 @@ tarball="${targetSuite}.tar.gz"
 if [ "$arch" != "$hostArch" ]; then
 	tarball="${targetSuite}-${arch}.tar.gz"
 fi
-tarball="$HOME/$tarball"
+tarball="$HOME/schroots/$tarball"
 
 dir="$(mktemp --tmpdir --directory "sbuild-createchroot.${targetSchroot}.XXXXXXXXXX")"
 trap "sudo rm -rf '$dir'" EXIT
