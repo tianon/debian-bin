@@ -8,6 +8,8 @@ targetSuite="$suite"
 case "$targetSuite" in
 	experimental) suite='unstable' ;;
 	rc-buggy) suite='sid' ;;
+	*-backports) suite="${targetSuite%-backports}" ;;
+	*-lts) suite="${targetSuite%-lts}" ;;
 esac
 
 hostArch="$(dpkg --print-architecture)"
@@ -61,8 +63,10 @@ echo 'Acquire::PDiffs "false";' | _cmd tee /etc/apt/apt.conf.d/no-pdiffs
 _incoming() {
 	local dist="$1"
 	case "$1" in
-		experimental|rc-buggy|unstable|sid|*-backports{,-sloppy}|*-proposed-updates|*-lts)
-			echo "deb http://incoming.debian.org/debian-buildd buildd-$1 main" | _cmd tee "/etc/apt/sources.list.d/incoming-${1}.list"
+		experimental|rc-buggy|unstable|sid|*-backports|*-backports-sloppy|*-proposed-updates|*-lts)
+			for d in deb deb-src; do
+				echo "$d http://incoming.debian.org/debian-buildd buildd-$1 main"
+			done | _cmd tee "/etc/apt/sources.list.d/incoming-${1}.list"
 			;;
 	esac
 }
@@ -71,7 +75,9 @@ _incoming "$suite"
 
 if [ "$suite" != "$targetSuite" ]; then
 	_incoming "$targetSuite"
-	echo "deb $mirror $targetSuite main" | _cmd tee -a /etc/apt/sources.list
+	for d in deb deb-src; do
+		echo "$d $mirror $targetSuite main"
+	done | _cmd tee -a /etc/apt/sources.list
 	suite="$targetSuite"
 fi
 
