@@ -27,7 +27,7 @@ tarball="$HOME/schroots/$tarball"
 dir="$(mktemp --tmpdir --directory "sbuild-createchroot.${targetSchroot}.XXXXXXXXXX")"
 trap "sudo rm -rf '$dir'" EXIT
 
-sudo rm -vf "/etc/schroot/chroot.d/$schroot-"*
+sudo rm -vf "/etc/schroot/chroot.d/$schroot"{,-*}
 sudo sbuild-createchroot \
 	--make-sbuild-tarball="${tarball}" \
 	--arch="$arch" \
