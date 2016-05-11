@@ -30,7 +30,7 @@ dir="$(mktemp --tmpdir --directory "sbuild-createchroot.${targetSchroot}.XXXXXXX
 trap "sudo rm -rf '$dir'" EXIT
 
 sudo rm -vf "/etc/schroot/chroot.d/$schroot"{,-*}
-sudo ~/sbuild-createchroot \
+sudo sbuild-createchroot \
 	--make-sbuild-tarball="${tarball}" \
 	--arch="$arch" \
 	--include=eatmydata \
