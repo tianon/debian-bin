@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+# https://gist.github.com/tianon/a0080cbca558e4b907fe
+
 suite="$1"
 shift || { echo >&2 "usage: $0 suite [arch]"; exit 1; }
 
@@ -28,7 +30,7 @@ dir="$(mktemp --tmpdir --directory "sbuild-createchroot.${targetSchroot}.XXXXXXX
 trap "sudo rm -rf '$dir'" EXIT
 
 sudo rm -vf "/etc/schroot/chroot.d/$schroot"{,-*}
-sudo sbuild-createchroot \
+sudo ~/sbuild-createchroot \
 	--make-sbuild-tarball="${tarball}" \
 	--arch="$arch" \
 	--include=eatmydata \
@@ -82,7 +84,8 @@ if [ "$suite" != "$targetSuite" ]; then
 fi
 
 # sbuild-update -udcar
-_cmd sh -ec '
+_cmd sh -xec '
+	export APT_CONFIG=/var/lib/sbuild/apt.conf
 	apt-get -y update
 	apt-get -y dist-upgrade
 	apt-get -y clean
