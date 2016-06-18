@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e
+
+dist="$(dpkg-parsechangelog -SDistribution)"
+[ "$dist" = 'UNRELEASED' ] && dist='unstable'
+
+src="$(dpkg-parsechangelog -SSource)"
+ver="$(dpkg-parsechangelog -SVersion | sed -r 's/^[0-9]+://')" # strip epoch
+dsc="../${src}_${ver}.dsc"
+
+args=( --dist="$dist" )
+case "$dist" in
+	experimental|rc-buggy|*-backports)
+		args+=( --build-dep-resolver=aptitude )
+		# TODO consider switching to aspcud (currently using aptitude because the buildds do)
+		;;
+esac
+args+=( "$@" "$dsc" )
+
+set -x
+dpkg-buildpackage -uc -us -S -nc -sa -i.git
+sbuild "${args[@]}"
