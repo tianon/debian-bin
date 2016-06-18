@@ -34,6 +34,8 @@ if [ "$origVer" != "$ver" ]; then
 		cp -a "${origs[@]}" "$tempDir/" 2>/dev/null \
 			&& break
 	done
+
+	# TODO test "pristine-tar" (possibly via "origtargz -dt")
 fi
 
 # copy over source
