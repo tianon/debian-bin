@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-dist="$(dpkg-parsechangelog -SDistribution)"
-[ "$dist" = 'UNRELEASED' ] && dist='unstable'
+selfDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+dist="$("$selfDir/dpkg-detect-target")"
 
 src="$(dpkg-parsechangelog -SSource)"
 ver="$(dpkg-parsechangelog -SVersion | sed -r 's/^[0-9]+://')" # strip epoch
