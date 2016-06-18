@@ -41,8 +41,6 @@ srcDir="$tempDir/$src"
 mkdir -p "$srcDir"
 cp -a . "$srcDir"
 
-ls -lAFh "$tempDir"
-
 dsc="$tempDir/${src}_${ver}.dsc"
 
 args=( --dist="$dist" )
@@ -56,6 +54,7 @@ args+=( "$@" "$dsc" )
 
 set -x
 cd "$srcDir"
+[ "$origVer" = "$ver" ] || "$selfDir/extract-origtargz"
 dpkg-buildpackage -uc -us -S -nc -sa -i.git
 cat "$dsc"
 sbuild "${args[@]}"
