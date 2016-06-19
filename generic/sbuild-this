@@ -35,7 +35,19 @@ if [ "$origVer" != "$ver" ]; then
 			&& break
 	done
 
-	# TODO test "pristine-tar" (possibly via "origtargz -dt")
+	origs=( "$tempDir/${src}_${origVer}.orig"*.tar.* )
+	if [ ! -f "${origs[0]}" ]; then
+		# if we still have no orig tarballs, let's test pristine-tar
+		possis=( $(pristine-tar list 2>/dev/null | grep "^${src}_${origVer}\.orig.*\.tar\..*$") ) || true
+		for possi in "${possis[@]}"; do
+			pristine-tar checkout "$tempDir/$possi"
+		done
+	fi
+
+	origs=( "$tempDir/${src}_${origVer}.orig"*.tar.* )
+	if [ ! -f "${origs[0]}" ]; then
+		echo >&2 "warning: cannot find ${origs[*]}"
+	fi
 fi
 
 # copy over source
