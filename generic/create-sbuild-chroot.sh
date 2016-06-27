@@ -1,9 +1,9 @@
 #!/bin/bash
-set -e
+set -eu
 
 # https://gist.github.com/tianon/a0080cbca558e4b907fe
 
-suite="$1"
+suite="${1:-}"
 shift || { echo >&2 "usage: $0 suite [arch]"; exit 1; }
 
 targetSuite="$suite"
