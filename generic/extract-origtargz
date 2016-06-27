@@ -64,7 +64,7 @@ done
 
 if [ "${#tarballs[@]}" -eq 0 ]; then
 	tarballs=( .. )
-	[ -z "$USCAN_DESTDIR" ] || tarballs+=( "$USCAN_DESTDIR" )
+	[ -z "${USCAN_DESTDIR:-}" ] || tarballs+=( "$USCAN_DESTDIR" )
 	tarballs+=( ../tarballs )
 fi
 
