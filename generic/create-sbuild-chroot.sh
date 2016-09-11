@@ -26,6 +26,8 @@ if [ "$arch" != "$hostArch" ]; then
 fi
 tarball="$HOME/schroots/$tarball"
 
+mkdir -p "$(dirname "$tarball")"
+
 dir="$(mktemp --tmpdir --directory "sbuild-createchroot.${targetSchroot}.XXXXXXXXXX")"
 trap "sudo rm -rf '$dir'" EXIT
 
