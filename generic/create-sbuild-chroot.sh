@@ -18,7 +18,7 @@ hostArch="$(dpkg --print-architecture)"
 arch="${1:-"$hostArch"}"
 schroot="$suite-$arch-sbuild"
 targetSchroot="$targetSuite-$arch-sbuild"
-mirror='http://httpredir.debian.org/debian'
+mirror='http://deb.debian.org/debian'
 
 tarball="${targetSuite}.tar.gz"
 if [ "$arch" != "$hostArch" ]; then
