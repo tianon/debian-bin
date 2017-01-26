@@ -22,12 +22,15 @@ if [ "$origVer" != "$ver" ]; then
 		[ -n "$origDir" ] \
 			|| continue
 
+		origDir="$(cd "$origDir" && pwd -P)" \
+			|| continue
+
 		origs=( "$origDir/${src}_${origVer}.orig"*.tar.* )
 		[ -f "${origs[0]}" ] \
 			|| continue
 
-		# try hard linking first (save time/space)
-		ln "${origs[@]}" "$tempDir/" 2>/dev/null \
+		# try symlinking first (save time/space)
+		ln -s "${origs[@]}" "$tempDir/" 2>/dev/null \
 			&& break
 
 		# otherwise, try copying
