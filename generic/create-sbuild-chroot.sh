@@ -16,7 +16,7 @@ esac
 
 hostArch="$(dpkg --print-architecture)"
 arch="${1:-"$hostArch"}"
-schroot="$suite-$arch-sbuild"
+schroot="$targetSuite-$arch-sbuild"
 targetSchroot="$targetSuite-$arch-sbuild"
 mirror='http://deb.debian.org/debian'
 
@@ -33,7 +33,8 @@ trap "sudo rm -rf '$dir'" EXIT
 
 sudo rm -vf "/etc/schroot/chroot.d/$schroot"{,-*}
 sudo sbuild-createchroot \
-	--make-sbuild-tarball="${tarball}" \
+	--chroot-prefix="$targetSuite" \
+	--make-sbuild-tarball="$tarball" \
 	--arch="$arch" \
 	--include=eatmydata \
 	"$suite" \
