@@ -1,5 +1,5 @@
-#!/bin/bash
-set -eu
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
 if [ -f "$HOME/.devscripts" ]; then
 	# "USCAN_DESTDIR"
@@ -160,8 +160,12 @@ extractTarball() {
 		echo >&2 "  ignoring all except $srcDir"
 	fi
 
+	# make sure rsyncArgs is never empty for poor folk (*cough* xenial *cough*) who don't have Bash 4.4+ yet
+	# (rsyncArgs[@]: unbound variable)
+	rsyncArgs+=( "$srcDir"/ )
+
 	echo -n "filling '$destDir' ... "
-	rsync -a "${rsyncArgs[@]}" "$srcDir"/ "$destDir"/
+	rsync -a "${rsyncArgs[@]}" "$destDir"/
 	echo 'done'
 
 	rm -rf "$tmpDir"
