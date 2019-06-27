@@ -157,7 +157,8 @@ extractTarball() {
 	srcDir="${files[0]}"
 	if [ "${#files[@]}" -gt 1 ]; then
 		echo >&2 "warning: '$tarball' contained more than just a single directory"
-		echo >&2 "  ignoring all except $srcDir"
+		echo >&2 "  copying all contents directly to '$destDir'"
+		srcDir="$tmpDir"
 	fi
 
 	# make sure rsyncArgs is never empty for poor folk (*cough* xenial *cough*) who don't have Bash 4.4+ yet
