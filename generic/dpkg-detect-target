@@ -1,0 +1,28 @@
+#!/bin/bash
+set -e
+
+dist="$(dpkg-parsechangelog -SDistribution)"
+if [ -z "$dist" ] || [ "$dist" = 'UNRELEASED' ]; then
+	dist=
+
+	# check for "Upload to XYZ." or "Rebuild for XYZ." in changelog
+	front='^\s*\*?\s*(Upload\s+to|Rebuild\s+for)\s+'
+	middle='\S+?'
+	back='\.?(\s+.*)?$'
+	dist="$(dpkg-parsechangelog -SChanges | awk '
+		/'"$front$middle$back"'/ {
+			gsub(/'"$front"'/, "");
+			gsub(/'"$back"'/, "");
+			print;
+			exit;
+		}
+	')"
+
+	lastDist="$(dpkg-parsechangelog -c1 -o1 -SDistribution 2>/dev/null || true)"
+	if [ -n "$lastDist" ] && [ "$lastDist" != 'UNRELEASED' ]; then
+		dist="$lastDist"
+	fi
+fi
+: "${dist:=unstable}"
+
+echo "$dist"

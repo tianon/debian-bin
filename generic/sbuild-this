@@ -1,0 +1,77 @@
+#!/bin/bash
+set -e
+
+if [ -f "$HOME/.devscripts" ]; then
+	# "USCAN_DESTDIR"
+	source "$HOME/.devscripts"
+fi
+
+selfDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+dist="$("$selfDir/dpkg-detect-target")"
+
+src="$(dpkg-parsechangelog -SSource)"
+ver="$(dpkg-parsechangelog -SVersion | sed -r 's/^[0-9]+://')" # strip epoch
+
+tempDir="$(mktemp -dt sbuild-this-XXXXXX)"
+trap "rm -rf '$tempDir'" EXIT
+
+# copy orig tarballs (if we can find any)
+origVer="${ver%-*}" # strip "debian version"
+if [ "$origVer" != "$ver" ]; then
+	for origDir in .. "$USCAN_DESTDIR" ../tarballs; do
+		[ -n "$origDir" ] \
+			|| continue
+
+		origDir="$(cd "$origDir" && pwd -P)" \
+			|| continue
+
+		origs=( "$origDir/${src}_${origVer}.orig"*.tar.* )
+		[ -f "${origs[0]}" ] \
+			|| continue
+
+		# try symlinking first (save time/space)
+		ln -s "${origs[@]}" "$tempDir/" 2>/dev/null \
+			&& break
+
+		# otherwise, try copying
+		cp -a "${origs[@]}" "$tempDir/" 2>/dev/null \
+			&& break
+	done
+
+	origs=( "$tempDir/${src}_${origVer}.orig"*.tar.* )
+	if [ ! -f "${origs[0]}" ]; then
+		# if we still have no orig tarballs, let's test pristine-tar
+		possis=( $(pristine-tar list 2>/dev/null | grep "^${src}_${origVer}\.orig.*\.tar\..*$") ) || true
+		for possi in "${possis[@]}"; do
+			pristine-tar checkout "$tempDir/$possi"
+		done
+	fi
+
+	origs=( "$tempDir/${src}_${origVer}.orig"*.tar.* )
+	if [ ! -f "${origs[0]}" ]; then
+		echo >&2 "warning: cannot find ${origs[*]}"
+	fi
+fi
+
+# copy over source
+srcDir="$tempDir/$src"
+mkdir -p "$srcDir"
+cp -a . "$srcDir"
+
+dsc="$tempDir/${src}_${ver}.dsc"
+
+args=( --dist="$dist" )
+case "$dist" in
+	experimental|rc-buggy|*-backports)
+		args+=( --build-dep-resolver=aptitude )
+		# TODO consider switching to aspcud (currently using aptitude because the buildds do)
+		;;
+esac
+args+=( "$@" "$dsc" )
+
+set -x
+cd "$srcDir"
+[ "$origVer" != "$ver" ] && "$selfDir/extract-origtargz" || echo "$src appears native, skipping extract-origtargz"
+dpkg-buildpackage -uc -us -S -nc -sa -i.git
+cat "$dsc"
+sbuild "${args[@]}"
