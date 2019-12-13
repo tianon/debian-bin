@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
+
+shopt -s dotglob
+
+# usage: $0 target-dir/ foo/ [bar/ [baz/ ...]]
+
+targetDir="$1"; shift
+mkdir -p "$targetDir"
+
+prog="$(basename "$0")"
+dir="$(mktemp -d -t "$prog.XXXXXX")"
+exitTrap="$(printf 'rm -rf %q' "$dir")"
+trap "$exitTrap" EXIT
+workdir="$dir/workdir"
+
+for sourceDir; do
+	[ -f "$sourceDir/debian/changelog" ]
+
+	mkdir "$workdir"
+	cp -aT "$sourceDir" "$workdir/src"
+
+	changelog="$workdir/src/debian/changelog"
+	pkg="$(dpkg-parsechangelog -l"$changelog" -SSource)"
+	ver="$(dpkg-parsechangelog -l"$changelog" -SVersion)"
+	origVer="${ver%-*}" # strip everything from the last dash
+	if [ "$ver" = "$origVer" ]; then
+		# if "$ver" = "$origVer" here, we're a "native" package and thus have no orig tarball
+		isNative=1
+	else
+		origVer="$(sed -r 's/^[0-9]+://' <<<"$origVer")" # strip epoch
+		isNative=
+	fi
+
+	needOrig=1
+	if [ -z "$isNative" ]; then
+		origPrefix="${pkg}_${origVer}.orig"
+		for f in "$sourceDir/../tarballs/$origPrefix"* "$sourceDir/../$origPrefix"*; do
+			base="$(basename "$f")"
+			if [ -f "$f" ] && [ ! -f "$workdir/$base" ]; then
+				cp -aT "$f" "$workdir/$base"
+				needOrig=
+			fi
+		done
+	fi
+	if [ -n "$needOrig" ]; then
+		uscan \
+			--destdir "$workdir" \
+			--download-current-version \
+			--rename \
+			"$workdir/src"
+	fi
+
+	if [ -z "$isNative" ]; then
+		extract-origtargz \
+			--dest "$workdir/src" \
+			--tarballs "$workdir"
+	fi
+
+	(
+		cd "$workdir/src"
+		dpkg-buildpackage \
+			--build=source \
+			--no-pre-clean \
+			--no-sign
+	)
+
+	cp -a "$workdir/"*_* "$targetDir/"
+
+	rm -rf "$workdir"
+done

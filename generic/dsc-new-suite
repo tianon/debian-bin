@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
+
+shopt -s dotglob
+
+# usage: $0 target-dir/ new-suite new-version-suffix foo.dsc [bar.dsc [baz.dsc ...]]
+
+targetDir="$1"; shift
+mkdir -p "$targetDir"
+
+suite="$1"; shift # "jessie"
+suffix="$1"; shift # "~deb8u0"
+
+prog="$(basename "$0")"
+dir="$(mktemp -d -t "$prog.XXXXXX")"
+exitTrap="$(printf 'rm -rf %q' "$dir")"
+trap "$exitTrap" EXIT
+workdir="$dir/workdir"
+
+for dsc; do
+	[ -f "$dsc" ]
+
+	mkdir "$workdir"
+
+	# extract source
+	dpkg-source \
+		--extract "$dsc" \
+		"$workdir/src"
+
+	# munge the changelog with a new entry (but the same date, urgency, etc)
+	changelog="$workdir/src/debian/changelog"
+	pkg="$(dpkg-parsechangelog -l"$changelog" -SSource)"
+	ver="$(dpkg-parsechangelog -l"$changelog" -SVersion)"
+	urg="$(dpkg-parsechangelog -l"$changelog" -SUrgency)"
+	maint="$(dpkg-parsechangelog -l"$changelog" -SMaintainer)"
+	date="$(dpkg-parsechangelog -l"$changelog" -SDate)"
+	echo
+	{
+		echo "$pkg ($ver$suffix) $suite; urgency=$urg"
+		echo
+		echo "  * Repacked for $suite"
+		echo
+		echo " -- $maint  $date"
+		echo
+	} | tee "$workdir/munged-changelog"
+	cat "$workdir/src/debian/changelog" >> "$workdir/munged-changelog"
+	mv "$workdir/munged-changelog" "$workdir/src/debian/changelog"
+
+	# build new source package
+	(
+		cd "$workdir/src"
+		dpkg-buildpackage \
+			--build=source \
+			--no-pre-clean \
+			--no-sign
+	)
+
+	# copy artifacts out
+	cp -a "$workdir/"*_* "$targetDir/"
+
+	rm -rf "$workdir"
+done
