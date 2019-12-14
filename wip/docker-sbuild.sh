@@ -1,54 +1,37 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
 
 # TODO need to figure out a way to handle building arch:all packages (flags to this script?)
-# TODO dpkg arch likely needs to be an argument to this script?  or parse from the given tarball?
 # TODO --build-dep-resolver aptitude ??
+# TODO --dist value ?? (should we be using *.changes instead of *.dsc ??)
+
+# usage: $0 target-dir/ buildd-chroot.tar foo.dsc [bar.dsc [baz.dsc ...]]
 
 targetDir="$1"; shift
 mkdir -p "$targetDir"
 
 tar="$1"; shift
 [ -f "$tar" ]
-
-deferred=
-defer() {
-	local newExit; newExit="$(printf "$@")"
-	[ -z "$deferred" ] || deferred="; $deferred"
-	deferred="$newExit$deferred"
-	trap "$deferred" EXIT
-}
-finalize() {
-	eval "$deferred"
-	deferred=
-	trap - EXIT
-}
+tar="$(readlink -f "$tar")"
+tarBase="$(basename "$tar")"
 
 for dsc; do
 	[ -f "$dsc" ]
-
-	dir="$(mktemp -d -t docker-sbuild.XXXXXX)"
-	defer 'rm -rf %q' "$dir"
-
-	# copy necessary artifacts into our temporary directory
-	cp -a "$dsc" "$dir/"
-	files="$(awk '/^[^:]+:$/ { f = $0; next } /^[^:]+:/ { f = ""; next } /^ / && f ~ /^(Files|Checksums-Sha[0-9]+):$/ { print $3 }' "$dsc")"
+	dsc="$(readlink -f "$dsc")"
 	dscDir="$(dirname "$dsc")"
-	for f in $files; do
-		cp -a "$dscDir/$f" "$dir/"
-	done
-	cp --reflink=auto -a "$tar" "$dir/"
+	dscBase="$(basename "$dsc")"
 
 	read -r -d '' bash <<-'EOBASH' || :
 		# schroot is picky about tarball ownership
-		cp -a "$tar" /tmp/; tar="$(basename "$tar")"; tar="/tmp/$tar"
+		tarBase="$(basename "$tar")"
+		cp -a "$tar" /tmp/
+		tar="/tmp/$tarBase"
 		chown root:root "$tar"
 
-		dpkgArch='amd64' # TODO !!!!!
-
-		cat > "/etc/schroot/chroot.d/tar-$dpkgArch-sbuild" <<-EOF
-			[tar-$dpkgArch-sbuild]
-			description=$dpkgArch Autobuilder ($tar)
+		cat > "/etc/schroot/chroot.d/tar" <<-EOF
+			[tar]
+			description=$tarBase
 			groups=root,sbuild
 			root-groups=root,sbuild
 			profile=sbuild
@@ -58,16 +41,15 @@ for dsc; do
 		EOF
 
 		sbuild \
-			--dist tar \
-			--arch "$dpkgArch" \
-			--no-source \
-			--arch-any \
-			--no-arch-all \
+			--arch-any --no-arch-all --no-source \
+			--chroot-mode schroot --chroot tar \
+			--dist unknown \
 			--resolve-alternatives \
-			--build-dep-resolver aptitude \
 			"$dsc"
 
 		chown -R "$chown" .
+
+		shopt -s dotglob
 		mv * /target/
 	EOBASH
 	[ -n "$bash" ]
@@ -77,17 +59,17 @@ for dsc; do
 	if [ -t 1 ]; then
 		tty='--tty'
 	fi
-	# TODO handle AppArmor confinement better (detect AppArmor perhaps)
+	# TODO handle AppArmor confinement better (at least detect AppArmor instead of assuming it)
+	chown="$(id -u):$(id -g)"
 	docker run -i $tty --rm \
 		--cap-add SYS_ADMIN --security-opt apparmor=unconfined \
-		--mount "type=bind,source=$dir,destination=/dir,readonly" \
+		--mount "type=bind,source=$dscDir,destination=/dir,readonly" \
+		--mount "type=bind,source=$tar,destination=/tar/$tarBase,readonly" \
 		--mount "type=bind,source=$targetDir,destination=/target" \
-		-e chown="$(id -u):$(id -g)" \
-		-e dsc="/dir/$(basename "$dsc")" \
-		-e tar="/dir/$(basename "$tar")" \
+		-e chown="$chown" \
+		-e dsc="/dir/$dscBase" \
+		-e tar="/tar/$tarBase" \
 		-w /intermediate \
 		tianon/sbuild \
 		bash -Eeuo pipefail -c "$bash"
-
-	finalize
 done
