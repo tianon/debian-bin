@@ -16,43 +16,44 @@ tar="$1"; shift
 tar="$(readlink -f "$tar")"
 tarBase="$(basename "$tar")"
 
+prog="$(basename "$0")"
+dir="$(mktemp -d -t "$prog.XXXXXX")"
+exitTrap="$(printf 'rm -rf %q' "$dir")"
+trap "$exitTrap" EXIT
+workdir="$dir/workdir"
+
+mkdir "$workdir"
+cp -a --reflink=auto "$tar" "$workdir/"
+cat > "$workdir/schroot.conf" <<-EOC
+	[tar]
+	description=$tarBase
+	groups=root,sbuild
+	root-groups=root,sbuild
+	profile=sbuild
+	type=file
+	file=/schroot/$tarBase
+	source-root-groups=root,sbuild
+EOC
+uid="$(id -u)"
+gid="$(id -g)"
+cat > "$workdir/Dockerfile" <<-EODF
+	FROM tianon/sbuild
+	RUN set -eux; \
+		groupadd --gid '$gid' user; \
+		useradd --gid '$gid' --uid '$uid' --groups sbuild user
+	# schroot is picky about tarball ownership
+	COPY --chown=root:root $tarBase /schroot/
+	COPY schroot.conf /etc/schroot/chroot.d/tar
+	USER user
+EODF
+img="$(docker build -q "$workdir")"
+rm -rf "$workdir"
+
 for dsc; do
 	[ -f "$dsc" ]
 	dsc="$(readlink -f "$dsc")"
 	dscDir="$(dirname "$dsc")"
 	dscBase="$(basename "$dsc")"
-
-	read -r -d '' bash <<-'EOBASH' || :
-		# schroot is picky about tarball ownership
-		tarBase="$(basename "$tar")"
-		cp -a "$tar" /tmp/
-		tar="/tmp/$tarBase"
-		chown root:root "$tar"
-
-		cat > "/etc/schroot/chroot.d/tar" <<-EOF
-			[tar]
-			description=$tarBase
-			groups=root,sbuild
-			root-groups=root,sbuild
-			profile=sbuild
-			type=file
-			file=$tar
-			source-root-groups=root,sbuild
-		EOF
-
-		sbuild \
-			--arch-any --no-arch-all --no-source \
-			--chroot-mode schroot --chroot tar \
-			--dist unknown \
-			--resolve-alternatives \
-			"$dsc"
-
-		chown -R "$chown" .
-
-		shopt -s dotglob
-		mv * /target/
-	EOBASH
-	[ -n "$bash" ]
 
 	# SYS_ADMIN is necessary for running sbuild
 	tty=
@@ -60,16 +61,18 @@ for dsc; do
 		tty='--tty'
 	fi
 	# TODO handle AppArmor confinement better (at least detect AppArmor instead of assuming it)
-	chown="$(id -u):$(id -g)"
 	docker run -i $tty --rm \
 		--cap-add SYS_ADMIN --security-opt apparmor=unconfined \
 		--mount "type=bind,source=$dscDir,destination=/dir,readonly" \
-		--mount "type=bind,source=$tar,destination=/tar/$tarBase,readonly" \
 		--mount "type=bind,source=$targetDir,destination=/target" \
-		-e chown="$chown" \
-		-e dsc="/dir/$dscBase" \
-		-e tar="/tar/$tarBase" \
-		-w /intermediate \
-		tianon/sbuild \
-		bash -Eeuo pipefail -c "$bash"
+		-w /target \
+		"$img" \
+		sbuild \
+			--arch-any --no-arch-all --no-source \
+			--build-dep-resolver aptitude \
+			--chroot-mode schroot --chroot tar \
+			--dist unknown \
+			--no-run-lintian \
+			--resolve-alternatives \
+			"/dir/$dscBase"
 done
