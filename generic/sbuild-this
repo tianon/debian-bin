@@ -1,9 +1,10 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -Eeuo pipefail
+trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
 
 if [ -f "$HOME/.devscripts" ]; then
 	# "USCAN_DESTDIR"
-	source "$HOME/.devscripts"
+	source "$HOME/.devscripts" &> /dev/null || :
 fi
 
 selfDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"

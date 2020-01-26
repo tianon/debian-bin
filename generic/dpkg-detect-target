@@ -1,25 +1,25 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -Eeuo pipefail
+trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
 
 dist="$(dpkg-parsechangelog -SDistribution)"
 if [ -z "$dist" ] || [ "$dist" = 'UNRELEASED' ]; then
 	dist=
 
 	# check for "Upload to XYZ." or "Rebuild for XYZ." in changelog
-	front='^\s*\*?\s*(Upload\s+to|Rebuild\s+for)\s+'
+	front='^\s*\*?\s*(Upload\s+to|Rebuild\s+for|Repacked\s+for)\s+'
 	middle='\S+?'
 	back='\.?(\s+.*)?$'
-	dist="$(dpkg-parsechangelog -SChanges | awk '
+	dist="$(dpkg-parsechangelog -SChanges | gawk '
 		/'"$front$middle$back"'/ {
-			gsub(/'"$front"'/, "");
-			gsub(/'"$back"'/, "");
-			print;
-			exit;
+			gsub(/'"$front"'/, "")
+			gsub(/'"$back"'/, "")
+			print
+			exit
 		}
 	')"
 
-	lastDist="$(dpkg-parsechangelog -c1 -o1 -SDistribution 2>/dev/null || true)"
-	if [ -n "$lastDist" ] && [ "$lastDist" != 'UNRELEASED' ]; then
+	if [ -z "$dist" ] && lastDist="$(dpkg-parsechangelog -c1 -o1 -SDistribution 2>/dev/null)" && [ -n "$lastDist" ] && [ "$lastDist" != 'UNRELEASED' ]; then
 		dist="$lastDist"
 	fi
 fi

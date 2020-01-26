@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
 
 if [ -f "$HOME/.devscripts" ]; then
 	# "USCAN_DESTDIR"
-	source "$HOME/.devscripts"
+	source "$HOME/.devscripts" &> /dev/null || :
 fi
 
 # similar to "origtargz --unpack", but supports multiple upstream tarballs
 usage() {
-	local self="$(basename "$0")"
+	local self="$0"; self="$(basename "$self")"
 	echo
 	echo "usage: $self [options]"
 	echo "   ie: $self"

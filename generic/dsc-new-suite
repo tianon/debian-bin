@@ -5,6 +5,20 @@ trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
 shopt -s dotglob
 
 # usage: $0 target-dir/ new-suite new-version-suffix foo.dsc [bar.dsc [baz.dsc ...]]
+usage() {
+	local self="$0"; self="$(basename "$self")"
+	echo "usage: $self target-dir/ new-suite new-version-suffix foo.dsc [bar.dsc [baz.dsc ...]]"
+	echo "   eg: $self my-output-dir/ buster '~deb10u0' moby-runc_*.dsc moby-containerd_*.dsc"
+}
+fatal_usage() {
+	if [ "$#" -gt 0 ]; then
+		echo >&2 "error: $*"
+		echo >&2
+	fi
+	usage >&2
+	exit 1
+}
+[ "$#" -ge 4 ] || fatal_usage "expected at least 4 arguments (got $#)"
 
 targetDir="$1"; shift
 mkdir -p "$targetDir"
