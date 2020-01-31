@@ -5,6 +5,7 @@ trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
 # TODO need to figure out a way to handle building arch:all packages (flags to this script?)
 # TODO --build-dep-resolver aptitude ??
 # TODO --dist value ?? (should we be using *.changes instead of *.dsc ??)
+# TODO detect --arch value from tarball ????
 
 # usage: $0 target-dir/ buildd-chroot.tar foo.dsc [bar.dsc [baz.dsc ...]]
 

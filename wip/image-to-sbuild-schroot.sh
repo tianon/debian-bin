@@ -32,7 +32,7 @@ docker build --iidfile "$dir/image.txt" "$dir"
 img="$(< "$dir/image.txt")"
 #defer 'docker rmi %q > /dev/null' "$img"
 
-ctr="$(docker create "$img")"
+ctr="$(docker create --entrypoint bogus "$img")"
 defer 'docker rm -vf %q > /dev/null' "$ctr"
 
 docker export --output "$tar" "$ctr"
