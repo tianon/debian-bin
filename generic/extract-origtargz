@@ -106,19 +106,23 @@ tarballDir=
 for dir in "${tarballs[@]}"; do
 	for f in "$dir/$origTarballPrefix".tar.*; do
 		[ -f "$f" ] || continue
-
 		origTarball="$f"
+		tarballDir="$dir"
+		break 2
+	done
+	for f in "$dir/$origTarballPrefix"-*.tar.*; do
+		[ -f "$f" ] || continue
 		tarballDir="$dir"
 		break 2
 	done
 done
 
-if [ -z "$origTarball" ]; then
+if [ -z "$origTarball" ] && [ -z "$tarballDir" ]; then
 	echo >&2 "error: no '$origTarballPrefix.tar.*' in any of:" "${tarballs[@]}"
 	exit 1
+elif [ -z "$origTarball" ]; then
+	echo >&2 "warning: no '$origTarballPrefix.tar.*' in any of:" "${tarballs[@]}"
 fi
-
-origTarball="$(readlink -f "$origTarball")"
 tarballDir="$(readlink -f "$tarballDir")"
 
 declare -A multiTarballs
@@ -128,7 +132,7 @@ for f in "$tarballDir/$origTarballPrefix"-*.tar.*; do
 
 	component="${f#$tarballDir/$origTarballPrefix-}"
 	component="${component%%.tar.*}"
-	multiTarballs[$component]="$f"
+	multiTarballs["$component"]="$f"
 done
 
 extractTarball() {
@@ -178,9 +182,12 @@ find "$dest" -mindepth 1 \( -name '.git' -o -name '.svn' -o -path "$debian" \) -
 find "$dest" -depth -mindepth 1 -not \( -name '.git' -o -path '*/.git/*' -o -name '.svn' -o -path '*/.svn/*' -o -path "$debian" -o -path "$debian/*" \) -exec rmdir '{}' +
 echo 'done'
 
-extractTarball "$origTarball" "$dest" "$debian"
+if [ -n "$origTarball" ]; then
+	origTarball="$(readlink -f "$origTarball")"
+	extractTarball "$origTarball" "$dest" "$debian"
+fi
 
 for component in "${!multiTarballs[@]}"; do
-	compTarball="${multiTarballs[$component]}"
+	compTarball="${multiTarballs["$component"]}"
 	extractTarball "$compTarball" "$dest/$component" "$debian"
 done
