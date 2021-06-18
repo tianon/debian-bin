@@ -67,7 +67,9 @@ for dsc; do
 		dpkg-buildpackage \
 			--build=source \
 			--no-pre-clean \
-			--no-sign
+			--no-sign \
+			--sanitize-env \
+			-sa
 	)
 
 	# copy artifacts out
