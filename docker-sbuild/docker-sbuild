@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
+
+# usage: $0 target-dir/ buildd-chroot.tar foo.dsc [bar.dsc [baz.dsc ...]]
+
+if ! opts="$(getopt --name "$0" --options '+' --longoptions 'mount:,workdir:,pull' -- "$@")"; then
+	# TODO usage
+	exit 1
+fi
+eval "set -- $opts"
+
+args=()
+buildArgs=()
+while [ "$#" -gt 0 ]; do
+	flag="$1"; shift
+	case "$flag" in
+		--mount | --workdir) args+=( "$flag" "$1" ); shift ;; # TODO come up with an easier way to perform builds against a remote Docker daemon
+		--pull) buildArgs+=( "$flag" ) ;;
+		--) break ;;
+		*) echo >&2 "error: unknown flag '$flag'"; exit 1 ;;
+	esac
+done
+
+targetDir="$1"; shift
+mkdir -p "$targetDir"
+targetDir="$(readlink -ev "$targetDir")"
+
+tar="$1"; shift
+[ -f "$tar" ]
+tar="$(readlink -ve "$tar")"
+tarBase="$(basename "$tar")"
+
+prog="$(basename "$0")"
+dir="$(mktemp -d -t "$prog.XXXXXX")"
+exitTrap="$(printf 'rm -rf %q' "$dir")"
+trap "$exitTrap" EXIT
+workdir="$dir/workdir"
+
+mkdir "$workdir"
+cp -a --reflink=auto "$tar" "$workdir/"
+cat > "$workdir/schroot.conf" <<-EOC
+	[tar]
+	description=$tarBase
+	groups=root,sbuild
+	root-groups=root,sbuild
+	profile=sbuild
+	type=file
+	file=/schroot/$tarBase
+	source-root-groups=root,sbuild
+EOC
+if tar --list --file "$tar" | grep -qE '^([.]/|/)?(usr/)?s?bin/eatmydata$'; then
+	echo 'command-prefix=eatmydata' >> "$workdir/schroot.conf"
+fi
+uid="$(id -u)"
+gid="$(id -g)"
+cat > "$workdir/Dockerfile" <<-EODF
+	FROM debian:bullseye-slim
+	RUN set -ex; \
+		apt-get update; \
+		apt-get install -y --no-install-recommends \
+			sbuild schroot \
+			ca-certificates \
+			devscripts libwww-perl file \
+			fakeroot \
+		; \
+		rm -rf /var/lib/apt/lists/*
+	RUN set -eux; \
+		groupadd --gid '$gid' user; \
+		useradd --gid '$gid' --uid '$uid' --groups sbuild user
+	# schroot is picky about tarball ownership
+	COPY --chown=root:root $tarBase /schroot/
+	COPY schroot.conf /etc/schroot/chroot.d/tar
+	USER user
+EODF
+docker build "${buildArgs[@]}" --iidfile "$dir/image.txt" "$workdir"
+img="$(< "$dir/image.txt")"
+rm -rf "$workdir"
+
+rm -rf "$dir"
+trap - EXIT
+
+args+=(
+	--interactive
+	--rm
+	--cap-add SYS_ADMIN # SYS_ADMIN is necessary for running sbuild :(
+	--security-opt apparmor=unconfined
+	--mount "type=bind,src=$targetDir,dst=/target"
+)
+if [ -t 0 ] && [ -t 1 ]; then
+	args+=( --tty )
+fi
+args+=(
+	"$img"
+
+	# TODO detect --arch and/or --dist being passed and skip some of this (since "schroot" is going to be a tiny bit heavy given it extracts the tarball)
+	bash -Eeuo pipefail -c '
+		arch="$(schroot -c chroot:tar -d/ -- dpkg --print-architecture)"
+		dist="$(schroot -c chroot:tar -d/ -- sh -c ". /etc/os-release && echo \${VERSION_CODENAME:-unknown}")"
+		cmd=( sbuild --arch "$arch" --dist "$dist" )
+
+		bits="$(schroot -c chroot:tar -d/ -- dpkg-architecture --query DEB_TARGET_ARCH_BITS)"
+		if [ "$bits" = 32 ]; then
+			cmd=( linux32 "${cmd[@]}" )
+		fi
+
+		exec "${cmd[@]}" "$@"
+	'
+
+	# set a few defaults
+	--arch-any --no-arch-all --no-source
+	--chroot-mode schroot --chroot tar
+	--no-run-lintian
+	--build-dir /target
+
+	#--resolve-alternatives
+
+	"$@"
+)
+exec docker run "${args[@]}"

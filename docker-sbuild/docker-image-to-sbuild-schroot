@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
+
+if ! opts="$(getopt --name "$0" --options '+' --longoptions 'platform:,pull' -- "$@")"; then
+	# TODO usage
+	exit 1
+fi
+eval "set -- $opts"
+
+buildArgs=()
+while [ "$#" -gt 0 ]; do
+	flag="$1"; shift
+	case "$flag" in
+		--platform) buildArgs+=( "$flag" "$1" ); shift ;;
+		--pull) buildArgs+=( "$flag" ) ;;
+		--) break ;;
+		*) echo >&2 "error: unknown flag '$flag'"; exit 1 ;;
+	esac
+done
+
+tar="$1"; shift # TODO || usage
+from="$1"; shift # TODO || usage
+
+onExit=
+defer() {
+	local newExit; newExit="$(printf "$@")"
+	onExit="$newExit${onExit:+; $onExit}"
+	trap "$onExit" EXIT
+}
+
+dir="$(mktemp -d -t docker-sbuild.XXXXXX)"
+defer 'rm -rf %q' "$dir"
+
+cat > "$dir/Dockerfile" <<-EOF
+	FROM $from
+	# this should match the package list added to the "buildd" variant in debootstrap and the list installed by sbuild
+	# https://salsa.debian.org/installer-team/debootstrap/blob/da5f17904de373cd7a9224ad7cd69c80b3e7e234/scripts/debian-common#L20
+	# https://salsa.debian.org/debian/sbuild/blob/fc306f4be0d2c57702c5e234273cd94b1dba094d/bin/sbuild-createchroot#L257-260
+	# (we also include "eatmydata" because it's useful for making builds faster)
+	RUN set -eux; \
+		apt-get update; \
+		apt-get dist-upgrade -y; \
+		apt-get install -y --no-install-recommends \
+			build-essential \
+			fakeroot \
+			eatmydata \
+		; \
+		rm -rf /var/lib/apt/lists/*
+EOF
+docker build "${buildArgs[@]}" --iidfile "$dir/image.txt" "$dir"
+img="$(< "$dir/image.txt")"
+#defer 'docker rmi %q > /dev/null' "$img"
+
+ctr="$(docker create --entrypoint bogus "$img")"
+defer 'docker rm -vf %q > /dev/null' "$ctr"
+
+docker export --output "$tar" "$ctr"
+
+# non-reproducibility:
+#  .dockerenv
+#  dev/*
+#  etc/hostname
+#  etc/hosts
+#  etc/mtab
+#  etc/resolv.conf
+#  etc/ timestamp
+tar --delete --file "$tar" .dockerenv dev etc/hostname etc/hosts etc/mtab etc/resolv.conf
+tar --delete --file "$tar" --no-recursion etc
+
+# sbuild needs "/dev/null" and our goofy tarball might not have it, so we need to "fake" it (which we do by adding Docker's intentionally minimal version to the end of the generated tarball)
+user="$(id -u):$(id -g)"
+tar="$(readlink -vf "$tar")"
+DOCKER_HOST= docker run -i --rm -u "$user" --mount "type=bind,source=$tar,destination=/tar.tar" debian:buster-slim tar --append --file=/tar.tar --directory=/ --mtime='1970-01-01T00:00:00Z' dev
+# TODO figure out a better way to handle a "remote" Docker daemon
+
+printf '%q created (FROM %q)\n' "$tar" "$from"
