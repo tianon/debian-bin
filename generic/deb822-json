@@ -24,14 +24,14 @@ jq -sR '
 	# normalize CRLF to just LF
 	gsub("\r\n|\r"; "\n")
 
-	# strip any trailing newlines
-	| sub("\n+$"; "")
-
 	# naïve PGP stripping
 	| gsub("^-----BEGIN PGP SIGNED MESSAGE-----\nHash: [^\n]+\n+|\n+-----BEGIN PGP SIGNATURE-----\n.*\n-----END PGP SIGNATURE-----\n*$"; ""; "m")
 
 	# strip any comments (optional in the spec, but for documents that should not have them they are invalid syntax anyhow so should be harmless to strip)
-	| gsub("(^|(?<=\n))#[^\n]*($|(?=\n))"; "")
+	| gsub("(^|\n)#[^\n]*($|\n)"; "\n")
+
+	# strip any leading/trailing newlines
+	| gsub("^\n+|\n+$"; "")
 
 	# split on double newlines
 	| split("\n\n+"; "")
