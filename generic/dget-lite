@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+targetDirectory="$1"; shift
+mkdir -p "$targetDirectory"
+targetDirectory="$(readlink -ev "$targetDirectory")"
+
+dsc="$1"; shift # can also take a .changes file 👀 (and either local path *or* remote)
+dscValidate="${1:-}" # (optional) bit of bash code to validate the dsc file after downloading it (before downloading more files from it); ideally from "dsc-extract-checksums" -> "bashValidate"
+
+if [ -e "$dsc" ]; then
+	dsc="$(readlink -ev "$dsc")"
+fi
+dscBase="$(basename "$dsc")"
+dscDir="$(dirname "$dsc")"
+
+_get() {
+	local f="$1"; shift
+	local validate="${1:-}"
+
+	# TODO copy/download to a temporary directory instead of directly into targetDirectory so that files only end up in targetDirectory *after* they're validated
+
+	if [ -e "$dscDir/$f" ]; then
+		cp --verbose --dereference --target-directory="$targetDirectory" "$dscDir/$f" || return 1
+	else
+		wget -qO "$targetDirectory/$f" "$dscDir/$f" || return 1
+	fi
+
+	if [ -n "$validate" ]; then
+		(
+			set -Eeuo pipefail
+			cd "$targetDirectory"
+			eval "$validate"
+		) || return 1
+	fi
+}
+
+# TODO if dscDir is local, we should pre-validate all the contents
+
+_get "$dscBase" "$dscValidate"
+
+shell="$(dsc-extract-checksums "$targetDirectory/$dscBase" | jq -r 'to_entries[] | "_get " + (.key | @sh) + " " + (.value.bashValidate | @sh)')"
+eval "$shell"
