@@ -20,11 +20,12 @@ _get() {
 	local validate="${1:-}"
 
 	# TODO copy/download to a temporary directory instead of directly into targetDirectory so that files only end up in targetDirectory *after* they're validated
+	# ... on second thought, we should download *everything* to a temporary directory first so we get all or nothing
 
 	if [ -e "$dscDir/$f" ]; then
 		cp --verbose --dereference --target-directory="$targetDirectory" "$dscDir/$f" || return 1
 	else
-		wget -qO "$targetDirectory/$f" "$dscDir/$f" || return 1
+		wget --no-verbose --output-document="$targetDirectory/$f" "$dscDir/$f" || return 1
 	fi
 
 	if [ -n "$validate" ]; then

@@ -32,7 +32,7 @@ _get() {
 			return 1
 		fi
 	else
-		if wget -qO "$to.XXX" "$repo/$path"; then
+		if wget --no-verbose --output-document="$to.XXX" "$repo/$path"; then
 			mv -fT "$to.XXX" "$to"
 		else
 			rm -f "$to.XXX"
