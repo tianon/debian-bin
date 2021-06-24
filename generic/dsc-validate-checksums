@@ -4,22 +4,12 @@ set -Eeuo pipefail
 for dscOrChanges; do
 	[ -s "$dscOrChanges" ]
 
-	json="$(deb822-json "$dscOrChanges" | jq -c '.[0]')"
-	dir="$(dirname "$dscOrChanges")"
-
-	# https://www.debian.org/doc/debian-policy/ch-controlfields.html#debian-changes-files-changes
-	# https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-checksums
-
-	shell="$(jq <<<"$json" -r '
-		.["Checksums-Sha256"]
-		| ltrimstr("\n") | split("\n")[]
-		| split(" ")
-		| .[0] as $sum | .[1] as $size | .[2] as $f
-		| [
-			"s=\"$(stat -c %s " + ($f | @sh) + ")\"",
-			"[ \"$s\" = " + ($size | @sh) + " ]",
-			"sha256sum --check --quiet --strict - <<<" + ($sum + " *" + $f | @sh)
-		] | join("\n")
-	')"
-	( set -Eeuo pipefail; cd "$dir"; eval "$shell" )
+	(
+		set -Eeuo pipefail
+		shell="$(dsc-extract-checksums "$dscOrChanges" | jq -r '.[].bashValidate // error("missing bashValidate from dsc-extract-checksums!")')"
+		[ -n "$shell" ]
+		dir="$(dirname "$dscOrChanges")"
+		cd "$dir"
+		eval "$shell"
+	)
 done

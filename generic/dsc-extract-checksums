@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [ "$#" -gt 0 ]; then
+	json="$(deb822-json "$@")"
+else
+	json="$(cat)"
+fi
+
+# https://www.debian.org/doc/debian-policy/ch-controlfields.html#debian-changes-files-changes
+# https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-checksums
+
+jq <<<"$json" -S '
+	if type == "array" then
+		.[]
+	else . end
+	| [
+		.Directory as $dir
+		| if has("Checksums-Sha512") then
+			[ "sha512", .["Checksums-Sha512"] ]
+		elif has("Checksums-Sha256") then
+			[ "sha256", .["Checksums-Sha256"] ]
+		elif has("Checksums-Sha1") then
+			[ "sha1", .["Checksums-Sha1"] ]
+		else
+			error("no Checksums-Sha512, Checksums-Sha256, or even Checksums-Sha1 found in input")
+		end
+		| .[0] as $type | .[1]
+		| ltrimstr("\n")
+		| split("\n")[]
+		| split(" ")
+		| {
+			( .[2] ): (
+				{
+					( $type ): .[0],
+					size: .[1],
+					bashValidate: ([
+						"s=\"$(stat -c %s " + (.[2] | @sh) + ")\"",
+						"[ \"$s\" = " + (.[1] | @sh) + " ]",
+						$type + "sum --check --quiet --strict - <<<" + (.[0] + " *" + .[2] | @sh)
+					] | join(" && ")),
+				}
+				+ if $dir then { directory: $dir } else {} end
+			),
+		}
+	] | add
+'
