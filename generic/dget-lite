@@ -9,6 +9,7 @@ dsc="$1"; shift # can also take a .changes file 👀 (and either local path *or*
 dscValidate="${1:-}" # (optional) bit of bash code to validate the dsc file after downloading it (before downloading more files from it); ideally from "dsc-extract-checksums" -> "bashValidate"
 
 if [ -e "$dsc" ]; then
+	# TODO instead of just assuming that files which exist are local, we should probably check for a URL prefix like "https?://" (and then use that consistent value throughout instead of trying to wget just because things don't exist locally)
 	dsc="$(readlink -ev "$dsc")"
 fi
 dscBase="$(basename "$dsc")"
