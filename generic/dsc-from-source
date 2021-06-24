@@ -77,7 +77,9 @@ for sourceDir; do
 		dpkg-buildpackage \
 			--build=source \
 			--no-pre-clean \
-			--no-sign
+			--no-sign \
+			--sanitize-env \
+			-sa
 	)
 
 	cp -a "$workdir/"*_* "$targetDir/"
