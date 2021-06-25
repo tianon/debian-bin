@@ -47,6 +47,16 @@ cat > "$dir/Dockerfile" <<-EOF
 			eatmydata \
 		; \
 		rm -rf /var/lib/apt/lists/*
+	COPY .tar-excludes /
+EOF
+cat > "$dir/.tar-excludes" <<-'EOF'
+	./.docker*
+	./.tar-excludes
+	./etc/hostname
+	./etc/hosts
+	./etc/resolv.conf
+	./proc/**
+	./sys/**
 EOF
 docker build "${buildArgs[@]}" --iidfile "$dir/image.txt" "$dir"
 img="$(< "$dir/image.txt")"
@@ -55,23 +65,9 @@ img="$(< "$dir/image.txt")"
 ctr="$(docker create --entrypoint bogus "$img")"
 defer 'docker rm -vf %q > /dev/null' "$ctr"
 
-docker export --output "$tar" "$ctr"
-
-# non-reproducibility:
-#  .dockerenv
-#  dev/*
-#  etc/hostname
-#  etc/hosts
-#  etc/mtab
-#  etc/resolv.conf
-#  etc/ timestamp
-tar --delete --file "$tar" .dockerenv dev etc/hostname etc/hosts etc/mtab etc/resolv.conf
-tar --delete --file "$tar" --no-recursion etc
-
-# sbuild needs "/dev/null" and our goofy tarball might not have it, so we need to "fake" it (which we do by adding Docker's intentionally minimal version to the end of the generated tarball)
-user="$(id -u):$(id -g)"
-tar="$(readlink -vf "$tar")"
-DOCKER_HOST= docker run -i --rm -u "$user" --mount "type=bind,source=$tar,destination=/tar.tar" debian:buster-slim tar --append --file=/tar.tar --directory=/ --mtime='1970-01-01T00:00:00Z' dev
-# TODO figure out a better way to handle a "remote" Docker daemon
+# since we already assumed the current Docker host can successfully run the image's binaries, we'll use that here
+timestamp="$(docker image inspect --format='{{ .Created }}' "$img")"
+docker run --rm --log-driver none --entrypoint bash --env timestamp="$timestamp" "$img" -Eeuo pipefail -c 'tar --create --directory=/ --one-file-system --exclude-from=/.tar-excludes --clamp-mtime --mtime="$timestamp" . ./dev' > "$tar"
+tar --list --file "$tar" > /dev/null # very crude "is this tar OK" test
 
 printf '%q created (FROM %q)\n' "$tar" "$from"
