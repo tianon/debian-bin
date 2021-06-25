@@ -35,3 +35,33 @@ Since this gets repetitive if the repository is intended to be the same software
 To generate the primary repository metadata (`dists/xxx`, `pool/xxx`, `incoming/xxx`, etc), invoke `apt-ftparchive-wrapper.sh`.
 
 To validate and move files from `incoming/xxx` into the appropriate `pool/xxx` subdirectories, invoke `incoming.sh`.
+
+To build source packages for a particular arch+suite+component combination, invoke `buildd.sh` and then use `dput-local` to copy the `.changes` files into the appropriate `incoming/xxx` directory.
+
+Full (simplified) workflow:
+
+```console
+$ # set up metadata.json
+$ cat .../repo/metadata.json
+{"suites":{"debian-buster":{"architectures":["amd64","source"],"components":["stable"]}}}
+
+$ # initialize the (empty) repository
+$ ./apt-ftparchive-wrapper.sh .../repo
+
+$ # get some source packages installed into the repo
+$ dsc-from-source .../repo/incoming/debian-buster/stable .../path/to/package/checkout
+$ ./incoming.sh .../repo
+$ ./apt-ftparchive-wrapper.sh .../repo
+
+$ # build those source packages for a target architecture and install the results into the repo
+$ ./buildd.sh /tmp/sbuild amd64 .../repo debian-buster stable
+$ dput-local .../repo/incoming/debian-buster/stable /tmp/sbuild/*.changes
+$ ./incoming.sh .../repo
+$ ./apt-ftparchive-wrapper.sh .../repo
+
+$ # publish .../repo somewhere
+$ rsync --archive --delete --exclude=.cache .../repo/ apt.example.com:static/
+
+$ # profit
+$ echo 'deb [ allow-insecure=yes trusted=yes ] https://apt.example.com debian-buster stable' > /etc/apt/sources.list.d/example.list
+```
