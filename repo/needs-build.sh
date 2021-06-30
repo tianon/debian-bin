@@ -13,7 +13,9 @@ export repo
 
 arches="$arch"
 if [ "$arch" != 'all' ]; then
+	# TODO this is ... not right (need to spend more time with dpkg-architecture(1); for example, "The wildcard that matches armel is any-arm, there is no any-armel wildcard.")
 	arches="$arch any any-$arch linux-$arch linux-any"
+	# (might even be worth shelling out to `dpkg-architecture` to get the "right" result)
 fi
 export arches
 
