@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# given a dpkg architecture ("armhf"), print the full list of possible "architecture wildcards" which might match it (in the "Architectures:" field of a source package, for example)
+
+# https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-architecture
+# https://www.debian.org/doc/debian-policy/ch-customized-programs.html#s-arch-spec
+# https://www.debian.org/doc/debian-policy/ch-customized-programs.html#id10
+# (in practice, "arch" + "os-any" + "any-cpu" + "any" is supposed to be all that gets used, but Tianon is fond of overkill)
+
+dpkgArch="$1"; shift # "armhf", "armel", "amd64", "kfreebsd-amd64", etc.
+export dpkgArch
+
+tuple="$(dpkg-architecture --target-arch "$dpkgArch" --command 'echo "$DEB_TARGET_ARCH_ABI-$DEB_TARGET_ARCH_LIBC-$DEB_TARGET_ARCH_OS-$DEB_TARGET_ARCH_CPU"')"
+export tuple
+
+jq -rn '
+	def any_prefixes:
+		., if test("^any(-[^-]+)*-any(-|$)") then
+			sub("^any-"; "") | any_prefixes
+		else empty end;
+
+	[
+		[
+			(env.tuple | split("-")),
+			("any-any-any-any" | split("-"))
+		]
+		| transpose
+		| combinations
+		| join("-")
+		| any_prefixes
+	]
+	| if index(env.dpkgArch) then empty else env.dpkgArch end,
+	.[]
+'
