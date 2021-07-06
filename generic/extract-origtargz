@@ -74,14 +74,14 @@ if [ ! -d "$dest" ]; then
 	echo >&2 "error: '$dest' does not exist or is not a directory"
 	exit 1
 fi
-dest="$(readlink -f "$dest")"
+dest="$(readlink -ve "$dest")"
 
 : "${debian:=$dest/debian}"
 if [ ! -d "$debian" ]; then
 	echo >&2 "error: '$debian' does not exist or is not a directory"
 	exit 1
 fi
-debian="$(readlink -f "$debian")"
+debian="$(readlink -ve "$debian")"
 
 changelog="$debian/changelog"
 if [ ! -f "$changelog" ]; then
@@ -123,7 +123,7 @@ if [ -z "$origTarball" ] && [ -z "$tarballDir" ]; then
 elif [ -z "$origTarball" ]; then
 	echo >&2 "warning: no '$origTarballPrefix.tar.*' in any of:" "${tarballs[@]}"
 fi
-tarballDir="$(readlink -f "$tarballDir")"
+tarballDir="$(readlink -ve "$tarballDir")"
 
 declare -A multiTarballs
 multiTarballs=()
@@ -183,7 +183,7 @@ find "$dest" -depth -mindepth 1 -not \( -name '.git' -o -path '*/.git/*' -o -nam
 echo 'done'
 
 if [ -n "$origTarball" ]; then
-	origTarball="$(readlink -f "$origTarball")"
+	origTarball="$(readlink -ve "$origTarball")"
 	extractTarball "$origTarball" "$dest" "$debian"
 fi
 

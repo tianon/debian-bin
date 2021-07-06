@@ -7,8 +7,7 @@ if [ -f "$HOME/.devscripts" ]; then
 	source "$HOME/.devscripts" &> /dev/null || :
 fi
 
-selfDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-dist="$("$selfDir/dpkg-detect-target")"
+dist="$(dpkg-detect-target)"
 
 src="$(dpkg-parsechangelog -SSource)"
 ver="$(dpkg-parsechangelog -SVersion | sed -r 's/^[0-9]+://')" # strip epoch
@@ -72,7 +71,7 @@ args+=( "$@" "$dsc" )
 
 set -x
 cd "$srcDir"
-[ "$origVer" != "$ver" ] && "$selfDir/extract-origtargz" || echo "$src appears native, skipping extract-origtargz"
+[ "$origVer" != "$ver" ] && extract-origtargz || echo "$src appears native, skipping extract-origtargz"
 dpkg-buildpackage -uc -us -S -nc -sa -i.git
 cat "$dsc"
 sbuild "${args[@]}"
