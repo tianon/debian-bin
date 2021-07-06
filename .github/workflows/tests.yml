@@ -22,5 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: apply dpkg-genbuildinfo workaround
+        run: |
+          # dpkg-genbuildinfo is very slow on GitHub Actions (likely due to the large number of installed packages); it helps these tests a LOT to skip that for our dpkg-buildpackage invocations
+          gen="$(command -v dpkg-genbuildinfo)"
+          sudo dpkg-divert --add --rename --divert "$gen.orig" "$gen"
+          sudo ln -sfT /bin/true "$gen"
       - run: ./tests/dsc.sh
-        # TODO dpkg-genbuildinfo is very slow on GitHub Actions (likely due to the large number of installed packages); it would help these tests a LOT to skip that for our dpkg-buildpackage invocations somehow
