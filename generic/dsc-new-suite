@@ -62,18 +62,23 @@ for dsc; do
 	mv "$workdir/munged-changelog" "$workdir/src/debian/changelog"
 
 	# build new source package
+	args=(
+		--build=source
+		--no-pre-clean
+		--no-sign
+		-sa
+	)
+	# --sanitize-env exists in bullseye, not in buster
+	if helpText="$(dpkg-buildpackage --help)" && grep -qF '--sanitize-env' <<<"$helpText"; then
+		args+=( --sanitize-env )
+	fi
 	(
 		cd "$workdir/src"
-		dpkg-buildpackage \
-			--build=source \
-			--no-pre-clean \
-			--no-sign \
-			--sanitize-env \
-			-sa
+		dpkg-buildpackage "${args[@]}"
 	)
 
 	# copy artifacts out
-	cp -a "$workdir/"*_* "$targetDir/"
+	dput-local "$targetDir" "$workdir"/*.changes
 
 	rm -rf "$workdir"
 done

@@ -71,17 +71,23 @@ for sourceDir; do
 			--tarballs "$workdir"
 	fi
 
+	args=(
+		--build=source
+		--no-pre-clean
+		--no-sign
+		-sa
+	)
+	# --sanitize-env exists in bullseye, not in buster
+	if helpText="$(dpkg-buildpackage --help)" && grep -qF '--sanitize-env' <<<"$helpText"; then
+		args+=( --sanitize-env )
+	fi
+
 	(
 		cd "$workdir/src"
-		dpkg-buildpackage \
-			--build=source \
-			--no-pre-clean \
-			--no-sign \
-			--sanitize-env \
-			-sa
+		dpkg-buildpackage "${args[@]}"
 	)
 
-	cp -a "$workdir/"*_* "$targetDir/"
+	dput-local "$targetDir" "$workdir"/*.changes
 
 	rm -rf "$workdir"
 done
