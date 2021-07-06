@@ -1,0 +1,44 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 3.0 (quilt)
+Source: refind
+Binary: refind
+Architecture: amd64 arm64 i386
+Version: 0.12.0-1
+Maintainer: Rod Smith <rod.smith@canonical.com>
+Uploaders: Tianon Gravi <tianon@debian.org>
+Homepage: https://www.rodsbooks.com/refind
+Standards-Version: 4.3.0
+Vcs-Browser: https://salsa.debian.org/debian/refind
+Vcs-Git: https://salsa.debian.org/debian/refind.git
+Build-Depends: debhelper (>= 9), gnu-efi
+Package-List:
+ refind deb admin optional arch=amd64,arm64,i386
+Checksums-Sha1:
+ a6b63bbaf9c09e63c82cbd54fb5a776e0260b3f9 3898337 refind_0.12.0.orig.tar.gz
+ c34e80a8df0a2eaf0c2cda626fb53bb829562154 20400 refind_0.12.0-1.debian.tar.xz
+Checksums-Sha256:
+ 7bb8505bc9ff87a7b6de38bf9a91d46f4d613b30031d5eb088a4d791a31eb7c4 3898337 refind_0.12.0.orig.tar.gz
+ 8309c086ed6fca7db5a025933f21a6dc3376689d9f393562b54615ad251c8e30 20400 refind_0.12.0-1.debian.tar.xz
+Files:
+ 673088f61ccd60535a3b2c0d607e4a7e 3898337 refind_0.12.0.orig.tar.gz
+ ce0411663ea17fcf9662a229ba72f725 20400 refind_0.12.0-1.debian.tar.xz
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJGBAEBCgAwFiEEtC9oGQB/APiONk/UA2qcJb81fdQFAl8Yqk4SHHRpYW5vbkBk
+ZWJpYW4ub3JnAAoJEANqnCW/NX3UB6YP/394uvDCmO7InHuU46EM3cxCQENl/zJQ
+Tpt5vR09/N5BUNAbB055LpKPjQ9cjhNN3w3gFLnJIkps+p8m+tVVs7NiNUOUsP99
+tYaRK1aOWbJ/na2kWxx9fMOR2WzuMwHFWObZ7nm+IoUur2DoF60iErOZjS1PSNTH
+6z3lV3Xs+Dzmviir326THubaJy7Lwxp00eWLodK3V57CYoClNC9iMCHg0PN9ResF
+E4Sg/ZtZkyoUpkcgaK7bdd/PUrPpq2ukZ7qZiu6GbWSNS08YS32pOENJ/BEqBuVt
+v1LF/4irFIbsDMeGfb/z20/8gemtG6OkEEqHjjB21iGGsYtwVMyoe83+etczhULQ
+R+ZpWHV8yAbhSomhZ/EXhm3uclCbpunHsaVdH4GyDOKJgZGZyUQz4mcEakSWlnRw
+ilhb6th8xos+SWeEPlR2bv4ZMgx08ygJr9o+A9wDg6A12Gs/ZChhccSlVaw1Hxkf
+kld330oX8NLxLgwYUX6Q2XbR4/jS587T9XXtwk73zBQZIfRlkC4FiRDzc9YWQXr2
+YINS3pkF4S6Vp/TqNbkJjfOlHfBVygcJDGUKYrGDvQGDkMeM74/kuFx6Y/3Y8cGh
+FF8uVQsbWico2GtGgkc8LpLwx2a8u2/RJ8M45YmQJc8uSiWtX+Umlrq9y4ctAm2o
+AcPfiRQe3Ggr
+=g8Id
+-----END PGP SIGNATURE-----

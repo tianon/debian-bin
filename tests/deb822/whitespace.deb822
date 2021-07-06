@@ -1,0 +1,12 @@
+
+
+
+# note both the leading _and_ trailing spaces here
+a:    b    
+# tabs
+c:	d	
+# mixed tabs and spaces
+e:	 	f	 	
+
+
+
