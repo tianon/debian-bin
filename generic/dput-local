@@ -18,34 +18,9 @@ fatal_usage() {
 
 targetDirectory="$1"; shift
 targetDirectory="$(readlink -ev "$targetDirectory")"
-
-# TODO consider reimplementing this via dget-lite?  it's basically just: for changes; do dget-lite "$targetDirectory" "$changes"; done 😅
+[ -d "$targetDirectory" ]
 
 for changes; do
 	[ -s "$changes" ]
-
-	json="$(dsc-extract-checksums "$changes")"
-	dir="$(dirname "$changes")"
-	export dir
-
-	if ! (
-		set -Eeuo pipefail
-		shell="$(jq <<<"$json" -r '.[].bashValidate // error("missing bashValidate from dsc-extract-checksums!")')"
-		[ -n "$shell" ]
-		cd "$dir"
-		eval "$shell"
-	); then
-		echo >&2 "error: '$changes' appears to be invalid or incomplete!"
-		exit 1
-	fi
-
-	files="$(jq <<<"$json" -r '
-		keys
-		| map(env.dir + "/" + . | @sh)
-		| join (" ")
-	')"
-	eval "files=( $files )"
-	files+=( "$changes" )
-
-	cp --verbose --dereference --target-directory="$targetDirectory" "${files[@]}"
+	dget-lite "$targetDirectory" "$changes"
 done
