@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+shopt -s dotglob
+
 self="$(basename "$0")"
 usage() {
 	echo "usage: $self target-dir/ foo.dsc [foo-validate-bash]"
@@ -23,38 +25,49 @@ targetDirectory="$(readlink -ev "$targetDirectory")"
 dsc="$1"; shift # can also take a .changes file 👀 (and either local path *or* remote)
 dscValidate="${1:-}" # (optional) bit of bash code to validate the dsc file after downloading it (before downloading more files from it); ideally from "dsc-extract-checksums" -> "bashValidate"
 
-if [ -e "$dsc" ]; then
-	# TODO instead of just assuming that files which exist are local, we should probably check for a URL prefix like "https?://" (and then use that consistent value throughout instead of trying to wget just because things don't exist locally)
+dir="$(mktemp -d -t "$self.XXXXXX")"
+exitTrap="$(printf 'rm -rf %q' "$dir")"
+trap "$exitTrap" EXIT
+workdir="$dir/workdir"
+mkdir "$workdir"
+
+remote=
+if grep -qE '^https?://' <<<"$dsc"; then
+	remote=1
+else
 	dsc="$(readlink -ev "$dsc")"
+	dsc-validate-checksums "$dsc"
 fi
+
 dscBase="$(basename "$dsc")"
 dscDir="$(dirname "$dsc")"
 
+files=()
 _get() {
 	local f="$1"; shift
 	local validate="${1:-}"
 
-	# TODO copy/download to a temporary directory instead of directly into targetDirectory so that files only end up in targetDirectory *after* they're validated
-	# ... on second thought, we should download *everything* to a temporary directory first so we get all or nothing
-
-	if [ -e "$dscDir/$f" ]; then
-		cp --verbose --dereference --target-directory="$targetDirectory" "$dscDir/$f" || return 1
+	if [ -n "$remote" ]; then
+		wget --no-verbose --output-document="$workdir/$f" "$dscDir/$f" || return 1
 	else
-		wget --no-verbose --output-document="$targetDirectory/$f" "$dscDir/$f" || return 1
+		cp --dereference --target-directory="$workdir" "$dscDir/$f" || return 1
 	fi
 
 	if [ -n "$validate" ]; then
 		(
 			set -Eeuo pipefail
-			cd "$targetDirectory"
+			cd "$workdir"
 			eval "$validate"
 		) || return 1
 	fi
-}
 
-# TODO if dscDir is local, we should pre-validate all the contents
+	[ -e "$workdir/$f" ] || return 1
+	files+=( "$workdir/$f" )
+}
 
 _get "$dscBase" "$dscValidate"
 
-shell="$(dsc-extract-checksums "$targetDirectory/$dscBase" | jq -r 'to_entries[] | "_get " + (.key | @sh) + " " + (.value.bashValidate | @sh)')"
+shell="$(dsc-extract-checksums "$workdir/$dscBase" | jq -r 'to_entries[] | "_get " + (.key | @sh) + " " + (.value.bashValidate | @sh)')"
 eval "$shell"
+
+cp --verbose --target-directory="$targetDirectory" "${files[@]}"
