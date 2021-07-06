@@ -77,14 +77,9 @@ for sourceDir; do
 		--no-sign
 		-sa
 	)
-	# --sanitize-env exists in bullseye, not in buster
-	if helpText="$(dpkg-buildpackage --help)" && grep -qF -- '--sanitize-env' <<<"$helpText"; then
-		args+=( --sanitize-env )
-	fi
-
 	(
 		cd "$workdir/src"
-		dpkg-buildpackage "${args[@]}"
+		env -i PATH="$PATH" dpkg-buildpackage "${args[@]}"
 	)
 
 	dput-local "$targetDir" "$workdir"/*.changes
