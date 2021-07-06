@@ -23,3 +23,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: ./tests/dsc.sh
+        # TODO dpkg-genbuildinfo is very slow on GitHub Actions (likely due to the large number of installed packages); it would help these tests a LOT to skip that for our dpkg-buildpackage invocations somehow
