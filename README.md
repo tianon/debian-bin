@@ -1,10 +1,10 @@
 # debian-bin
 
-A collection of small(ish) Debian-focused utiltiies to help automate/accelerate various tasks around Debian packaging and building.
+A collection of small(ish) Debian-focused utilities to help automate/accelerate various tasks around Debian packaging and building.
 
 Many will utilize Docker, but many are also reasonably standalone (like `extract-origtargz`, which I've been using successfully for years now).
 
-This repository supercedes https://gist.github.com/tianon/a0080cbca558e4b907fe with hopefully growing success.
+This repository supersedes https://gist.github.com/tianon/a0080cbca558e4b907fe with hopefully growing success.
 
 ## utilities
 
