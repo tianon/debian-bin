@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+self="$(basename "$0")"
+usage() {
+	echo "usage: $self target-incoming-dir/ foo.changes [bar.changes [...]]"
+	echo "   eg: $self incoming/ /path/to/foo.dsc"
+}
+fatal_usage() {
+	if [ "$#" -gt 0 ]; then
+		echo >&2 "error: $*"
+		echo >&2
+	fi
+	usage >&2
+	exit 1
+}
+[ "$#" -ge 2 ] || fatal_usage "expected at least 2 arguments (got $#)"
+
 targetDirectory="$1"; shift
 targetDirectory="$(readlink -ev "$targetDirectory")"
 

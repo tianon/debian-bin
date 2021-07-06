@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+self="$(basename "$0")"
+usage() {
+	echo "usage: $self target-dir/ foo.dsc [foo-validate-bash]"
+	echo "   eg: $self my-output-dir/ https://example.com/foo.dsc \"sha256sum --strict --check <<<'deadbeefcafe *foo.dsc'\""
+}
+fatal_usage() {
+	if [ "$#" -gt 0 ]; then
+		echo >&2 "error: $*"
+		echo >&2
+	fi
+	usage >&2
+	exit 1
+}
+[ "$#" -ge 2 ] || fatal_usage "expected at least 2 arguments (got $#)"
+
 targetDirectory="$1"; shift
 mkdir -p "$targetDirectory"
 targetDirectory="$(readlink -ev "$targetDirectory")"

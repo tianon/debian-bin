@@ -2,6 +2,8 @@
 set -Eeuo pipefail
 trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
 
+# usage: ... <tar> <image>
+
 if ! opts="$(getopt --name "$0" --options '+' --longoptions 'platform:,pull' -- "$@")"; then
 	# TODO usage
 	exit 1

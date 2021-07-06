@@ -5,8 +5,8 @@ trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
 shopt -s dotglob
 
 # usage: $0 target-dir/ foo/ [bar/ [baz/ ...]]
+self="$(basename "$0")"
 usage() {
-	local self="$0"; self="$(basename "$self")"
 	echo "usage: $self target-dir/ foo/ [bar/ [baz/ ...]]"
 	echo "   eg: $self my-output-dir/ moby-runc/ moby-containerd/"
 }
@@ -23,8 +23,7 @@ fatal_usage() {
 targetDir="$1"; shift
 mkdir -p "$targetDir"
 
-prog="$(basename "$0")"
-dir="$(mktemp -d -t "$prog.XXXXXX")"
+dir="$(mktemp -d -t "$self.XXXXXX")"
 exitTrap="$(printf 'rm -rf %q' "$dir")"
 trap "$exitTrap" EXIT
 workdir="$dir/workdir"

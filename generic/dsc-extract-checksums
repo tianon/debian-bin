@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# usage: dsc-extract-checksums foo.changes
+# usage: dsc-extract-checksums foo.dsc
+# usage: deb822-json foo.dsc | dsc-extract-checksums
+
 if [ "$#" -gt 0 ]; then
 	json="$(deb822-json "$@")"
 else
