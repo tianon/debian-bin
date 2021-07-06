@@ -78,7 +78,7 @@ for sourceDir; do
 		-sa
 	)
 	# --sanitize-env exists in bullseye, not in buster
-	if helpText="$(dpkg-buildpackage --help)" && grep -qF '--sanitize-env' <<<"$helpText"; then
+	if helpText="$(dpkg-buildpackage --help)" && grep -qF -- '--sanitize-env' <<<"$helpText"; then
 		args+=( --sanitize-env )
 	fi
 
