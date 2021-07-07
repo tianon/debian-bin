@@ -50,14 +50,12 @@ $ ./apt-ftparchive-wrapper.sh .../repo
 
 $ # get some source packages installed into the repo
 $ dsc-from-source .../repo/incoming/debian-buster/stable .../path/to/package/checkout
-$ ./incoming.sh .../repo
-$ ./apt-ftparchive-wrapper.sh .../repo
+$ ./dinstall.sh .../repo
 
 $ # build those source packages for a target architecture and install the results into the repo
 $ ./buildd.sh /tmp/sbuild amd64 .../repo debian-buster stable
 $ dput-local .../repo/incoming/debian-buster/stable /tmp/sbuild/*.changes
-$ ./incoming.sh .../repo
-$ ./apt-ftparchive-wrapper.sh .../repo
+$ ./dinstall.sh .../repo
 
 $ # publish .../repo somewhere
 $ rsync --archive --delete --exclude=.cache .../repo/ apt.example.com:static/
