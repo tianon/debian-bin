@@ -34,7 +34,7 @@ Since this gets repetitive if the repository is intended to be the same software
 
 To generate the primary repository metadata (`dists/xxx`, `pool/xxx`, `incoming/xxx`, etc), invoke `apt-ftparchive-wrapper.sh`.
 
-To validate and move files from `incoming/xxx` into the appropriate `pool/xxx` subdirectories, invoke `incoming.sh`.
+To validate and move files from `incoming/xxx` into the appropriate `pool/xxx` subdirectories, invoke `incoming.sh` (or use `dinstall.sh` to auto-run `apt-ftparchive-wrapper.sh` to regenerate the appropriate files too).
 
 To build source packages for a particular arch+suite+component combination, invoke `buildd.sh` and then use `dput-local` to copy the `.changes` files into the appropriate `incoming/xxx` directory.
 
@@ -58,7 +58,7 @@ $ dput-local .../repo/incoming/debian-buster/stable /tmp/sbuild/*.changes
 $ ./dinstall.sh .../repo
 
 $ # publish .../repo somewhere
-$ rsync --archive --delete --exclude=.cache .../repo/ apt.example.com:static/
+$ rsync --archive --delete --exclude=/.cache/ --exclude=/incoming/ .../repo/ apt.example.com:static/
 
 $ # profit
 $ echo 'deb [ allow-insecure=yes trusted=yes ] https://apt.example.com debian-buster stable' > /etc/apt/sources.list.d/example.list
