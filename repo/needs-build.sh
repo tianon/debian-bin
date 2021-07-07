@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+usage() {
+	local self="$0"; self="$(basename "$self")"
+	echo "usage: $self dpkg-arch repo-dir-or-url dist component"
+	echo "   eg: $self arm64 https://deb.debian.org/debian unstable non-free"
+}
+fatal_usage() {
+	if [ "$#" -gt 0 ]; then
+		echo >&2 "error: $*"
+		echo >&2
+	fi
+	usage >&2
+	exit 1
+}
+[ "$#" -eq 4 ] || fatal_usage "expected 4 arguments (got $#)"
+
 arch="$1"; shift
 repo="$1"; shift
 dist="$1"; shift

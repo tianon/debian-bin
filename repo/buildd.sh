@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+usage() {
+	local self="$0"; self="$(basename "$self")"
+	echo "usage: $self target-dir/ dpkg-arch repo-dir-or-url dist component"
+	echo "   eg: $self my-output-dir/ arm64 https://deb.debian.org/debian unstable non-free"
+}
+fatal_usage() {
+	if [ "$#" -gt 0 ]; then
+		echo >&2 "error: $*"
+		echo >&2
+	fi
+	usage >&2
+	exit 1
+}
+[ "$#" -eq 5 ] || fatal_usage "expected 4 arguments (got $#)"
+
 targetDirectory="$1"; shift
 mkdir -p "$targetDirectory"
 
