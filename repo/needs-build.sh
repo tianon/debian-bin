@@ -21,7 +21,10 @@ repo="$1"; shift
 dist="$1"; shift
 comp="$1"; shift
 
-if [ -d "$repo" ]; then
+remote=
+if grep -qE '^https?://' <<<"$repo"; then
+	remote=1
+else
 	repo="$(readlink -ev "$repo")"
 fi
 export repo
@@ -40,17 +43,17 @@ trap "$exitTrap" EXIT
 _get() {
 	local to="$1"; shift
 	local path="$1"; shift
-	if [ -d "$repo" ]; then
-		if [ -e "$repo/$path" ]; then
-			cp -afT "$repo/$path" "$to"
-		else
-			return 1
-		fi
-	else
+	if [ -n "$remote" ]; then
 		if wget --no-verbose --output-document="$to.XXX" "$repo/$path"; then
 			mv -fT "$to.XXX" "$to"
 		else
 			rm -f "$to.XXX"
+			return 1
+		fi
+	else
+		if [ -e "$repo/$path" ]; then
+			cp -afT "$repo/$path" "$to"
+		else
 			return 1
 		fi
 	fi
