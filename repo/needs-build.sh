@@ -96,14 +96,21 @@ built="$(jq <<<"$packages" -c '
 ')"
 export built
 
-# TODO use Build-Depends + Package to do a crude sort_by here?? (to ensure we list packages in the order they ought to build)
+jqDir="$(readlink -ev "$BASH_SOURCE")"
+jqDir="$(dirname "$jqDir")"
+jqDir="$(dirname "$jqDir")/jq"
 
-jq <<<"$sources" -c '
-	(env.arches | split("[[:space:]]+"; "")) as $arches
+jq <<<"$sources" -c -L"$jqDir" '
+	include "dpkg-version";
+
+	# TODO use Build-Depends + Package to somehow do a crude sort_by across packages?? (to ensure we list packages in the order they ought to build)
+
+	group_by(.Package)
+	| map(sort_by(.Version | dpkg_version_sort_split) | last)
+	| (env.arches | split("[[:space:]]+"; "")) as $arches
 	| (env.built | fromjson) as $built
-	| .[]
-	| select(
+	| map(select(
 		(.Architecture | split(" ") | any(. as $arch | $arches | index($arch)))
 		and (((.Package // .Source) + " (" + .Version + ")") as $pkg | $built | index($pkg) | not)
-	)
+	))
 ' | dsc-extract-checksums | jq 'with_entries(select(.key | endswith(".dsc")) | .value.path = env.repo + "/" + .value.directory + "/" + .key)'
