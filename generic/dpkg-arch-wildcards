@@ -11,7 +11,8 @@ set -Eeuo pipefail
 dpkgArch="$1"; shift # "armhf", "armel", "amd64", "kfreebsd-amd64", etc.
 export dpkgArch
 
-tuple="$(dpkg-architecture --target-arch "$dpkgArch" --command 'echo "$DEB_TARGET_ARCH_ABI-$DEB_TARGET_ARCH_LIBC-$DEB_TARGET_ARCH_OS-$DEB_TARGET_ARCH_CPU"')"
+currentArch="$(dpkg --print-architecture)" # using "--target-arch" AND "--host-arch" helps silence "dpkg-architecture: warning: cannot determine CC system type, falling back to default (native compilation)" (https://bugs.debian.org/856396)
+tuple="$(dpkg-architecture --host-arch "$currentArch" --target-arch "$dpkgArch" --command 'echo "$DEB_TARGET_ARCH_ABI-$DEB_TARGET_ARCH_LIBC-$DEB_TARGET_ARCH_OS-$DEB_TARGET_ARCH_CPU"')"
 export tuple
 
 jq -rn '
