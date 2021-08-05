@@ -93,16 +93,19 @@ fi
 args+=(
 	"$img"
 
-	# TODO detect --arch and/or --dist being passed and skip some of this (since "schroot" is going to be a tiny bit heavy given it extracts the tarball)
 	bash -Eeuo pipefail -c '
-		arch="$(schroot -c chroot:tar -d/ -- dpkg --print-architecture)"
-		dist="$(schroot -c chroot:tar -d/ -- sh -c ". /etc/os-release && echo \${VERSION_CODENAME:-unknown}")"
+		schroot --chroot chroot:tar --session-name sess --begin-session > /dev/null
+
+		arch="$(schroot --chroot sess --directory / --run-session -- dpkg --print-architecture)"
+		dist="$(schroot --chroot sess --directory / --run-session -- sh -c ". /etc/os-release && echo \${VERSION_CODENAME:-unknown}")"
 		cmd=( sbuild --arch "$arch" --dist "$dist" )
 
-		bits="$(schroot -c chroot:tar -d/ -- dpkg-architecture --query DEB_TARGET_ARCH_BITS)"
+		bits="$(schroot --chroot sess --directory / --run-session -- dpkg-architecture --query DEB_TARGET_ARCH_BITS)"
 		if [ "$bits" = 32 ]; then
 			cmd=( linux32 "${cmd[@]}" )
 		fi
+
+		schroot --chroot sess --end-session
 
 		exec "${cmd[@]}" "$@"
 	'
