@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 trap 'echo >&2 "$BASH_SOURCE: line $LINENO: unexpected exit $?"' ERR
 
-# usage: $0 target-dir/ buildd-chroot.tar foo.dsc [bar.dsc [baz.dsc ...]]
+# usage: $0 --mount ... --workdir ... target-dir/ buildd-chroot.tar [sbuild-args] foo.dsc
 
 if ! opts="$(getopt --name "$0" --options '+' --longoptions 'mount:,workdir:,pull' -- "$@")"; then
 	# TODO usage
@@ -49,7 +49,7 @@ cat > "$workdir/schroot.conf" <<-EOC
 	file=/schroot/$tarBase
 	source-root-groups=root,sbuild
 EOC
-if tar --list --file "$tar" | grep -qE '^([.]/|/)?(usr/)?s?bin/eatmydata$'; then
+if tar --list --file "$tar" --wildcards '*bin/eatmydata' | grep -E '^([.]/|/)?(usr/)?s?bin/eatmydata$' > /dev/null; then # resist the temptation to "grep -q" here ("tar: write error")
 	echo 'command-prefix=eatmydata' >> "$workdir/schroot.conf"
 fi
 uid="$(id -u)"
