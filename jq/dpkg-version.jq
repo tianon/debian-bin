@@ -4,12 +4,14 @@ def dpkg_version_sort_split:
 	[
 		if index(":") then . else "0:" + . end # force epoch to be specified
 		| if index("-") then . else . + "-0" end # force revision to be specified
-		| scan("[0-9]+|[^0-9]+")
+		| scan("[0-9]+|[:~-]|[^0-9:~-]+")
 		| try tonumber // (
 			split("")
 			| map(
 				# https://metacpan.org/release/GUILLEM/Dpkg-1.20.9/source/lib/Dpkg/Version.pm#L338-350
 				if . == "~" then
+					-2
+				elif . == "-" or . == ":" then # account for me being a little *too* clever (as discovered by using the Dpkg_Version.t test suite)
 					-1
 				else
 					explode[0]

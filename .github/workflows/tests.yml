@@ -10,12 +10,13 @@ defaults:
 
 jobs:
 
-  deb822:
-    name: deb822-json
+  jq:
+    name: jq
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: ./tests/deb822.sh
+      - run: ./tests/jq-dpkg-version.sh
 
   dsc:
     name: dsc
