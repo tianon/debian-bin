@@ -28,6 +28,10 @@ exitTrap="$(printf 'rm -rf %q' "$dir")"
 trap "$exitTrap" EXIT
 workdir="$dir/workdir"
 
+# https://salsa.debian.org/debian/devscripts/-/blob/664e4eb0c015c01486b8d1079fb9a65a29e69bce/conf.default.in#L34-37
+export DEVSCRIPTS_CHECK_DIRNAME_LEVEL=0
+# (because we copy into a directory called "src" this will always fail)
+
 for sourceDir; do
 	[ -f "$sourceDir/debian/changelog" ]
 
