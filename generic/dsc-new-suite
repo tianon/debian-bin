@@ -47,8 +47,16 @@ for dsc; do
 	pkg="$(dpkg-parsechangelog -l"$changelog" -SSource)"
 	ver="$(dpkg-parsechangelog -l"$changelog" -SVersion)"
 	urg="$(dpkg-parsechangelog -l"$changelog" -SUrgency)"
-	maint="$(dpkg-parsechangelog -l"$changelog" -SMaintainer)"
-	date="$(dpkg-parsechangelog -l"$changelog" -SDate)"
+	if [ -n "${DEBFULLNAME:-}" ] && [ -n "${DEBEMAIL}" ]; then
+		maint="$DEBFULLNAME <$DEBEMAIL>"
+	else
+		maint="$(dpkg-parsechangelog -l"$changelog" -SMaintainer)"
+	fi
+	if [ -n "${SOURCE_DATE_EPOCH:-}" ]; then
+		date="$(date --rfc-email --date "@$SOURCE_DATE_EPOCH")"
+	else
+		date="$(dpkg-parsechangelog -l"$changelog" -SDate)"
+	fi
 	echo
 	{
 		echo "$pkg ($ver$suffix) $suite; urgency=$urg"
