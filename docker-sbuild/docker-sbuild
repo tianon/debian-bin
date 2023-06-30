@@ -86,6 +86,9 @@ args+=(
 	--cap-add SYS_ADMIN # SYS_ADMIN is necessary for running sbuild :(
 	--security-opt apparmor=unconfined
 	--mount "type=bind,src=$targetDir,dst=/target"
+
+	--env DEB_BUILD_OPTIONS
+	--env DEB_BUILD_PROFILES
 )
 if [ -t 0 ] && [ -t 1 ]; then
 	args+=( --tty )
