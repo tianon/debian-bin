@@ -18,7 +18,12 @@ trap "rm -rf '$tempDir'" EXIT
 # copy orig tarballs (if we can find any)
 origVer="${ver%-*}" # strip "debian version"
 if [ "$origVer" != "$ver" ]; then
-	for origDir in .. "$USCAN_DESTDIR" ../tarballs; do
+	origDirs=( .. )
+	if [ -n "${USCAN_DESTDIR:-}" ]; then
+		origDirs+=( "$USCAN_DESTDIR" )
+	fi
+	origDirs+=( ../tarballs )
+	for origDir in "${origDirs[@]}"; do
 		[ -n "$origDir" ] \
 			|| continue
 
