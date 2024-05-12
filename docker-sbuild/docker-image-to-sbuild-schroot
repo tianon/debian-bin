@@ -64,9 +64,6 @@ docker build "${buildArgs[@]}" --iidfile "$dir/image.txt" "$dir"
 img="$(< "$dir/image.txt")"
 #defer 'docker rmi %q > /dev/null' "$img"
 
-ctr="$(docker create --entrypoint bogus "$img")"
-defer 'docker rm -vf %q > /dev/null' "$ctr"
-
 # since we already assumed the current Docker host can successfully run the image's binaries, we'll use that here
 timestamp="$(docker image inspect --format='{{ .Created }}' "$img")"
 docker run --rm --log-driver none --entrypoint bash --env timestamp="$timestamp" "$img" -Eeuo pipefail -c 'tar --create --directory=/ --one-file-system --exclude-from=/.tar-excludes --clamp-mtime --mtime="$timestamp" . ./dev' > "$tar"
