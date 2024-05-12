@@ -46,6 +46,9 @@ defer 'rm -rf %q' "$dir"
 		eatmydata apt-get install -y --no-install-recommends \
 			build-essential \
 			fakeroot \
+			\
+	# in case of extra repositories needing https
+			ca-certificates \
 		; \
 		rm -rf /var/lib/apt/lists/*
 	COPY .tar-excludes /
