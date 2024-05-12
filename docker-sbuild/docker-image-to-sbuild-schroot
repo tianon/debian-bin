@@ -34,8 +34,7 @@ defer() {
 dir="$(mktemp -d -t docker-sbuild.XXXXXX)"
 defer 'rm -rf %q' "$dir"
 
-cat > "$dir/Dockerfile" <<-EOF
-	FROM $from
+{ echo "FROM $from"; cat; } > "$dir/Dockerfile" <<-'EOF'
 	# this should match the package list added to the "buildd" variant in debootstrap and the list installed by sbuild
 	# https://salsa.debian.org/installer-team/debootstrap/blob/da5f17904de373cd7a9224ad7cd69c80b3e7e234/scripts/debian-common#L20
 	# https://salsa.debian.org/debian/sbuild/blob/fc306f4be0d2c57702c5e234273cd94b1dba094d/bin/sbuild-createchroot#L257-260
