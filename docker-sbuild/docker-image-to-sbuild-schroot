@@ -66,6 +66,9 @@ docker build "${buildArgs[@]}" --iidfile "$dir/image.txt" "$dir"
 img="$(< "$dir/image.txt")"
 #defer 'docker rmi %q > /dev/null' "$img"
 
+# TODO we need to re-inject /etc/hosts into the end result!
+# (otherwise things like https://github.com/kubernetes/kube-openapi/blob/f0e62f92d13f418e2732b21c952fd17cab771c75/pkg/validation/validate/jsonschema_test.go#L109 result in "panic: listen tcp: lookup localhost on 172.17.0.1:53: no such host")
+
 # since we already assumed the current Docker host can successfully run the image's binaries, we'll use that here
 timestamp="$(docker image inspect --format='{{ .Created }}' "$img")"
 docker run --rm --log-driver none --entrypoint bash --env timestamp="$timestamp" "$img" -Eeuo pipefail -c 'tar --create --directory=/ --one-file-system --exclude-from=/.tar-excludes --clamp-mtime --mtime="$timestamp" . ./dev' > "$tar"
