@@ -50,7 +50,14 @@ defer 'rm -rf %q' "$dir"
 	# in case of extra repositories needing https
 			ca-certificates \
 		; \
-		rm -rf /var/lib/apt/lists/*
+	# only APT 2.7.8+ has "apt-get dist-clean"
+	# https://tracker.debian.org/news/1492892/accepted-apt-278-source-into-unstable/
+		aptVersion="$(dpkg-query --show --showformat '${Version}\n' apt)"; \
+		if dpkg --compare-versions "$aptVersion" '>=' '2.7.8~'; then \
+			apt-get dist-clean; \
+		else \
+			rm -rf /var/lib/apt/lists/*; \
+		fi
 	COPY .tar-excludes /
 EOF
 cat > "$dir/.tar-excludes" <<-'EOF'
