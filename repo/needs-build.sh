@@ -81,9 +81,8 @@ sources="$(deb822-json "$dir/Sources")"
 # gather a list of source+version combinations that are already built for this architecture
 # https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-source
 built="$(jq <<<"$packages" -c '
-	[
-		.[]
-		| if .Source then
+	map(
+		if .Source then
 			if .Source | index(" ") then
 				.Source
 			else
@@ -92,7 +91,8 @@ built="$(jq <<<"$packages" -c '
 		else
 			.Package + " (" + .Version + ")"
 		end
-	] | unique
+	)
+	| unique
 ')"
 export built
 
