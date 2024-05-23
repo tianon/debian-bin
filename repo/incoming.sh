@@ -32,7 +32,7 @@ eval "process=( $shell )"
 for p in "${process[@]}"; do
 	incomingDir="incoming/$p"
 	poolBaseDir="pool/$p"
-	for changes in "$incomingDir"/*.changes; do
+	for changes in "$incomingDir"/*.changes "$incomingDir"/*.dsc; do # it's important that we process "changes" files before "dsc" files since the former usually includes the latter
 		[ -f "$changes" ] || continue
 
 		changesJson="$(deb822-json "$changes" | jq '.[0]')"
