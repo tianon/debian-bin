@@ -32,10 +32,29 @@ export suite
 comp="$1"; shift
 
 # TODO --image flag
-distro="${suite%%-*}"
-distroSuite="${suite#$distro-}"
+case "$suite" in
+	debian-* | ubuntu-*)
+		distro="${suite%%-*}"
+		distroSuite="${suite#$distro-}"
+		;;
+
+	# if suite isn't "{debian,ubuntu}-xxx", then we should try to auto-detect whether the value is a suite of Debian or Ubuntu
+	*)
+		# TODO something less ... hanky?
+		if bashbrew list "https://github.com/docker-library/official-images/raw/HEAD/library/debian:$suite" &> /dev/null; then
+			distro='debian'
+			distroSuite="$suite"
+		elif bashbrew list "https://github.com/docker-library/official-images/raw/HEAD/library/ubuntu:$suite" &> /dev/null; then
+			distr='ubuntu'
+			distroSuite="$suite"
+		else
+			echo >&2 "error: failed to determine what distribution '$suite' belongs to"
+			exit 1
+		fi
+		;;
+esac
+: "$distro" "$distroSuite"
 export distro distroSuite
-# TODO if suite isn't "foo-bar", then we should try to auto-detect whether the value is a suite of Debian or Ubuntu
 
 image="$(jq -rn '
 	({
@@ -47,16 +66,21 @@ image="$(jq -rn '
 	+ "/" + env.distro
 	+ ":" + env.distroSuite
 	+ if env.distro == "debian" and env.distroSuite != "unstable" then
-		"-backports"
+		"-backports" # TODO use of backports should be optional, somehow
 	else "" end
 ')"
 
 sbuildArgs=(
+	# TODO alternatives and aptitude resolver should be optional somehow (and more sbuild flags should be possible to add)
 	--bd-uninstallable-explainer apt
 	--build-dep-resolver aptitude
-	--arch "$dpkgArch"
 	--dist "$distroSuite"
 )
+if [ "$dpkgArch" != 'all' ]; then
+	sbuildArgs+=( --arch "$dpkgArch" --no-arch-all )
+else
+	sbuildArgs+=( --arch-all --no-arch-any )
+fi
 
 prog="$(basename "$0")"
 dir="$(mktemp -d -t "$prog.XXXXXX")"
@@ -71,8 +95,9 @@ if [ "${#jsons[@]}" -eq 0 ]; then
 	exit
 fi
 
-docker-image-to-sbuild-schroot --pull "$dir/chroot.tar" "$image"
+docker-image-to-sbuild-schroot --pull "$dir/chroot.tar" "$image" # TODO --pull somehow smarter
 
+failures=0
 for json in "${jsons[@]}"; do
 	shell="$(jq <<<"$json" -r '
 		[
@@ -87,12 +112,16 @@ for json in "${jsons[@]}"; do
 	dsc="$dir/dsc/$dscBase"
 	dsc="$(readlink -ev "$dsc")"
 	dscDir="$(dirname "$dsc")"
-	docker-sbuild \
+	if ! docker-sbuild \
 		--mount "type=bind,src=$dscDir,dst=/dsc,ro" \
 		--workdir /dsc \
 		"$targetDirectory" \
 		"$dir/chroot.tar" \
 		"${sbuildArgs[@]}" \
-		"$dscBase"
-	# TODO allow failure?
+		"$dscBase" \
+	; then
+		# TODO allow stopping on failure
+		(( failures++ )) || :
+	fi
 done
+exit "$failures"
