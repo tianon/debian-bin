@@ -99,9 +99,8 @@ args+=(
 	bash -Eeuo pipefail -c '
 		schroot --chroot chroot:tar --session-name sess --begin-session > /dev/null
 
-		arch="$(schroot --chroot sess --directory / --run-session -- dpkg --print-architecture)"
 		dist="$(schroot --chroot sess --directory / --run-session -- sh -c ". /etc/os-release && echo \${VERSION_CODENAME:-unknown}")"
-		cmd=( sbuild --arch "$arch" --dist "$dist" )
+		cmd=( sbuild --dist "$dist" )
 
 		bits="$(schroot --chroot sess --directory / --run-session -- dpkg-architecture --query DEB_TARGET_ARCH_BITS)"
 		if [ "$bits" = 32 ]; then
@@ -111,10 +110,9 @@ args+=(
 		schroot --chroot sess --end-session
 
 		exec "${cmd[@]}" "$@"
-	'
+	' --
 
-	# set a few defaults
-	--arch-any --no-arch-all --no-source
+	# set a few defaults (TODO set these differently so we can override them easier)
 	--chroot-mode schroot --chroot tar
 	--no-run-lintian
 	--build-dir /target
