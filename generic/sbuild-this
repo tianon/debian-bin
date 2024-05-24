@@ -34,8 +34,8 @@ if [ "$origVer" != "$ver" ]; then
 		[ -f "${origs[0]}" ] \
 			|| continue
 
-		# try symlinking first (save time/space)
-		ln -s "${origs[@]}" "$tempDir/" 2>/dev/null \
+		# try hardlinking first (save time/space)
+		ln "${origs[@]}" "$tempDir/" 2>/dev/null \
 			&& break
 
 		# otherwise, try copying
