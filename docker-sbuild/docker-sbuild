@@ -55,7 +55,7 @@ fi
 uid="$(id -u)"
 gid="$(id -g)"
 cat > "$workdir/Dockerfile" <<-EODF
-	FROM debian:bullseye-slim
+	FROM debian:bookworm-slim
 	RUN set -ex; \
 		apt-get update; \
 		apt-get install -y --no-install-recommends \
