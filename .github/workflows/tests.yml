@@ -14,7 +14,7 @@ jobs:
     name: jq
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: ./tests/deb822.sh
       - run: ./tests/jq-dpkg-version.sh
 
@@ -22,7 +22,7 @@ jobs:
     name: dsc
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: apply dpkg-genbuildinfo workaround
         run: |
           # dpkg-genbuildinfo is very slow on GitHub Actions (likely due to the large number of installed packages); it helps these tests a LOT to skip that for our dpkg-buildpackage invocations
