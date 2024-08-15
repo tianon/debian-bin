@@ -94,7 +94,8 @@ img="$(< "$dir/image.txt")"
 
 # since we already assumed the current Docker host can successfully run the image's binaries, we'll use that here
 timestamp="$(docker image inspect --format='{{ .Created }}' "$img")"
-docker run --rm --log-driver none --entrypoint bash --env timestamp="$timestamp" "$img" -Eeuo pipefail -c 'tar --create --directory=/ --one-file-system --exclude-from=/.tar-excludes --clamp-mtime --mtime="$timestamp" --transform="s/tianon-fake-etc/etc/g" . ./dev' > "$tar"
-tar --list --file "$tar" > /dev/null # very crude "is this tar OK" test
+docker run --rm --log-driver none --entrypoint bash --env timestamp="$timestamp" "$img" -Eeuo pipefail -c 'tar --create --directory=/ --one-file-system --exclude-from=/.tar-excludes --clamp-mtime --mtime="$timestamp" --transform="s/tianon-fake-etc/etc/g" . ./dev' > "$tar.new"
+tar --list --file "$tar.new" > /dev/null # very crude "is this tar OK" test
+mv "$tar.new" "$tar" # make tar creation atomic
 
 printf '%q created (FROM %q)\n' "$tar" "$from"
