@@ -31,13 +31,13 @@ shell="$(jq -r '
 			Components: (.components | join(" ")),
 			Architectures: (.architectures | join(" ")),
 		} + .metadata
-		| "apt-ftparchive "
+		| @sh "rm -f \("dists/" + $suite + "/Release")",
+		"apt-ftparchive "
 		+ (
 			.metadata
 			| to_entries
 			| map(
-				"-o "
-				+ ("APT::FTPArchive::Release::" + .key + "=" + .value | @sh)
+				@sh "-o \("APT::FTPArchive::Release::" + .key + "=" + .value)"
 			)
 			| join(" ")
 		)
@@ -45,7 +45,7 @@ shell="$(jq -r '
 		+ ("dists/" + $suite | @sh)
 		+ " > "
 		+ ("dists/" + $suite + "/Release.new" | @sh),
-		"mv " + ("dists/" + $suite + "/Release.new" | @sh) + " " + ("dists/" + $suite + "/Release" | @sh)
+		@sh "mv \("dists/" + $suite + "/Release.new") \("dists/" + $suite + "/Release")"
 	]
 	| join("\n")
 ' metadata.json)"
