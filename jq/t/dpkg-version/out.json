@@ -1,0 +1,530 @@
+{
+	"0": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0",
+			"revision": null
+		},
+		"string": "0"
+	},
+	"0:0-0": {
+		"parse": {
+			"epoch": "0",
+			"upstream": "0",
+			"revision": "0"
+		},
+		"string": "0:0-0"
+	},
+	"0fo": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0fo",
+			"revision": null
+		},
+		"string": "0fo"
+	},
+	"0foo0bar": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo0bar",
+			"revision": null
+		},
+		"string": "0foo0bar"
+	},
+	"0foo1bar": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo1bar",
+			"revision": null
+		},
+		"string": "0foo1bar"
+	},
+	"0foo1bar-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo1bar",
+			"revision": "1"
+		},
+		"string": "0foo1bar-1"
+	},
+	"0foo2": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo2",
+			"revision": null
+		},
+		"string": "0foo2"
+	},
+	"0foo2.0": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo2.0",
+			"revision": null
+		},
+		"string": "0foo2.0"
+	},
+	"0foo2.0.0": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo2.0.0",
+			"revision": null
+		},
+		"string": "0foo2.0.0"
+	},
+	"0foo2.1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo2.1",
+			"revision": null
+		},
+		"string": "0foo2.1"
+	},
+	"0foo2.10": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo2.10",
+			"revision": null
+		},
+		"string": "0foo2.10"
+	},
+	"0foo2.10.0": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo2.10.0",
+			"revision": null
+		},
+		"string": "0foo2.10.0"
+	},
+	"0foo~1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo~1",
+			"revision": null
+		},
+		"string": "0foo~1"
+	},
+	"0foo~~": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo~~",
+			"revision": null
+		},
+		"string": "0foo~~"
+	},
+	"0foo~": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo~",
+			"revision": null
+		},
+		"string": "0foo~"
+	},
+	"0foo~foo+Bar": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo~foo+Bar",
+			"revision": null
+		},
+		"string": "0foo~foo+Bar"
+	},
+	"0foo~foo+bar": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo~foo+bar",
+			"revision": null
+		},
+		"string": "0foo~foo+bar"
+	},
+	"0foo": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo",
+			"revision": null
+		},
+		"string": "0foo"
+	},
+	"0:0foo": {
+		"parse": {
+			"epoch": "0",
+			"upstream": "0foo",
+			"revision": null
+		},
+		"string": "0:0foo"
+	},
+	"0foo-0": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo",
+			"revision": "0"
+		},
+		"string": "0foo-0"
+	},
+	"0foo-01": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo",
+			"revision": "01"
+		},
+		"string": "0foo-01"
+	},
+	"0foobar": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foobar",
+			"revision": null
+		},
+		"string": "0foobar"
+	},
+	"0foobar-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foobar",
+			"revision": "1"
+		},
+		"string": "0foobar-1"
+	},
+	"0foo+": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo+",
+			"revision": null
+		},
+		"string": "0foo+"
+	},
+	"0foo.bar": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0foo.bar",
+			"revision": null
+		},
+		"string": "0foo.bar"
+	},
+	"0.0.8+dfsg1-3": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0.0.8+dfsg1",
+			"revision": "3"
+		},
+		"string": "0.0.8+dfsg1-3"
+	},
+	"0.0.9+dfsg1-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0.0.9+dfsg1",
+			"revision": "1"
+		},
+		"string": "0.0.9+dfsg1-1"
+	},
+	"0.9i-20070324-2": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0.9i-20070324",
+			"revision": "2"
+		},
+		"string": "0.9i-20070324-2"
+	},
+	"0.9j-20080306-4": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0.9j-20080306",
+			"revision": "4"
+		},
+		"string": "0.9j-20080306-4"
+	},
+	"0.9.9~pre111-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0.9.9~pre111",
+			"revision": "1"
+		},
+		"string": "0.9.9~pre111-1"
+	},
+	"0.9.9~pre122-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "0.9.9~pre122",
+			"revision": "1"
+		},
+		"string": "0.9.9~pre122-1"
+	},
+	"1~": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1~",
+			"revision": null
+		},
+		"string": "1~"
+	},
+	"1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1",
+			"revision": null
+		},
+		"string": "1"
+	},
+	"0:1": {
+		"parse": {
+			"epoch": "0",
+			"upstream": "1",
+			"revision": null
+		},
+		"string": "0:1"
+	},
+	"1a": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1a",
+			"revision": null
+		},
+		"string": "1a"
+	},
+	"1.0-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.0",
+			"revision": "1"
+		},
+		"string": "1.0-1"
+	},
+	"1.0000-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.0000",
+			"revision": "1"
+		},
+		"string": "1.0000-1"
+	},
+	"1.0.1-2": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.0.1",
+			"revision": "2"
+		},
+		"string": "1.0.1-2"
+	},
+	"1.0.1+gpl-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.0.1+gpl",
+			"revision": "1"
+		},
+		"string": "1.0.1+gpl-1"
+	},
+	"1.0.8": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.0.8",
+			"revision": null
+		},
+		"string": "1.0.8"
+	},
+	"1.0.8+nmu1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.0.8+nmu1",
+			"revision": null
+		},
+		"string": "1.0.8+nmu1"
+	},
+	"1.2.0~b6-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.2.0~b6",
+			"revision": "1"
+		},
+		"string": "1.2.0~b6-1"
+	},
+	"1.2.0~b7-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.2.0~b7",
+			"revision": "1"
+		},
+		"string": "1.2.0~b7-1"
+	},
+	"1.06-2": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.06",
+			"revision": "2"
+		},
+		"string": "1.06-2"
+	},
+	"1.09": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.09",
+			"revision": null
+		},
+		"string": "1.09"
+	},
+	"1.9": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.9",
+			"revision": null
+		},
+		"string": "1.9"
+	},
+	"1.011-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1.011",
+			"revision": "1"
+		},
+		"string": "1.011-1"
+	},
+	"2.0-2": {
+		"parse": {
+			"epoch": null,
+			"upstream": "2.0",
+			"revision": "2"
+		},
+		"string": "2.0-2"
+	},
+	"2.2~rc-4": {
+		"parse": {
+			"epoch": null,
+			"upstream": "2.2~rc",
+			"revision": "4"
+		},
+		"string": "2.2~rc-4"
+	},
+	"2.2-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "2.2",
+			"revision": "1"
+		},
+		"string": "2.2-1"
+	},
+	"3.8.GA-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "3.8.GA",
+			"revision": "1"
+		},
+		"string": "3.8.GA-1"
+	},
+	"3.10+nmu1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "3.10+nmu1",
+			"revision": null
+		},
+		"string": "3.10+nmu1"
+	},
+	"3.11": {
+		"parse": {
+			"epoch": null,
+			"upstream": "3.11",
+			"revision": null
+		},
+		"string": "3.11"
+	},
+	"4.6.99+svn6496-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "4.6.99+svn6496",
+			"revision": "1"
+		},
+		"string": "4.6.99+svn6496-1"
+	},
+	"4.6.99+svn6582-1": {
+		"parse": {
+			"epoch": null,
+			"upstream": "4.6.99+svn6582",
+			"revision": "1"
+		},
+		"string": "4.6.99+svn6582-1"
+	},
+	"52": {
+		"parse": {
+			"epoch": null,
+			"upstream": "52",
+			"revision": null
+		},
+		"string": "52"
+	},
+	"53": {
+		"parse": {
+			"epoch": null,
+			"upstream": "53",
+			"revision": null
+		},
+		"string": "53"
+	},
+	"1000a": {
+		"parse": {
+			"epoch": null,
+			"upstream": "1000a",
+			"revision": null
+		},
+		"string": "1000a"
+	},
+	"12345+that-really-is-some-ver-0": {
+		"parse": {
+			"epoch": null,
+			"upstream": "12345+that-really-is-some-ver",
+			"revision": "0"
+		},
+		"string": "12345+that-really-is-some-ver-0"
+	},
+	"12345+that-really-is-some-ver-10": {
+		"parse": {
+			"epoch": null,
+			"upstream": "12345+that-really-is-some-ver",
+			"revision": "10"
+		},
+		"string": "12345+that-really-is-some-ver-10"
+	},
+	"1:0foo": {
+		"parse": {
+			"epoch": "1",
+			"upstream": "0foo",
+			"revision": null
+		},
+		"string": "1:0foo"
+	},
+	"1:3.8.1-1": {
+		"parse": {
+			"epoch": "1",
+			"upstream": "3.8.1",
+			"revision": "1"
+		},
+		"string": "1:3.8.1-1"
+	},
+	"1:7.5": {
+		"parse": {
+			"epoch": "1",
+			"upstream": "7.5",
+			"revision": null
+		},
+		"string": "1:7.5"
+	},
+	"2:2.3.2-2": {
+		"parse": {
+			"epoch": "2",
+			"upstream": "2.3.2",
+			"revision": "2"
+		},
+		"string": "2:2.3.2-2"
+	},
+	"2:2.3.2-2+lenny2": {
+		"parse": {
+			"epoch": "2",
+			"upstream": "2.3.2",
+			"revision": "2+lenny2"
+		},
+		"string": "2:2.3.2-2+lenny2"
+	},
+	"2:2.5": {
+		"parse": {
+			"epoch": "2",
+			"upstream": "2.5",
+			"revision": null
+		},
+		"string": "2:2.5"
+	}
+}
