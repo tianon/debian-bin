@@ -3,24 +3,41 @@ name: Tests
 on:
   pull_request:
   push:
+  workflow_dispatch:
 
 defaults:
   run:
     shell: 'bash -Eeuo pipefail -x {0}'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  #cancel-in-progress: true # TODO if our tests ever become expensive, we should enable this
+
+permissions:
+  contents: read
+
 jobs:
 
   jq:
-    name: jq
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - ubuntu-24.04
+          - ubuntu-22.04
+          - ubuntu-20.04
+          - windows-2025
+          - windows-2022
+          - windows-2019
+    name: jq ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: ./tests/deb822.sh
-      - run: ./tests/jq-dpkg-version.sh
+      - run: ./jq/t/do.sh
+      - run: git diff --exit-code
 
   dsc:
     name: dsc
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # TODO fix reproducibility assumptions around dpkg-buildpackage in dsc.sh
     steps:
       - uses: actions/checkout@v4
       - name: apply dpkg-genbuildinfo workaround

@@ -1,3 +1,5 @@
+# https://www.debian.org/doc/debian-policy/ch-controlfields.html#version
+
 # given a Debian version, returns an array that can be used for sorting
 # inspired heavily by the Dpkg::Version (Perl) source code
 def dpkg_version_sort_split:
