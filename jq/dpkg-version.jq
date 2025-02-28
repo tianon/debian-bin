@@ -1,5 +1,33 @@
 # https://www.debian.org/doc/debian-policy/ch-controlfields.html#version
 
+# given a Debian version, returns a parsed object: { epoch, upstream, revision }
+def dpkg_version_parse:
+	capture("
+		^
+		(?:
+			(?<epoch>[0-9]*)
+			[:]
+		)?
+		(?<upstream>.*?)
+		(?:
+			[-]
+			(?<revision>[^-]*)
+		)?
+		$
+	"; "x")
+;
+
+# given a parsed object (from dpkg_version_parse), returns a Debian version
+def dpkg_version_string:
+	if .epoch then
+		"\(.epoch):"
+	else "" end
+	+ .upstream
+	+ if .revision then
+		"-\(.revision)"
+	else "" end
+;
+
 # given a Debian version, returns an array that can be used for sorting
 # inspired heavily by the Dpkg::Version (Perl) source code
 def dpkg_version_sort_split:
