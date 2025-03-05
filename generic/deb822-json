@@ -4,4 +4,4 @@ set -Eeuo pipefail
 # https://manpages.debian.org/testing/dpkg-dev/deb822.5.en.html
 
 dir="$(dirname "$BASH_SOURCE")"
-exec jq -sR -L"$dir/../jq" 'include "deb822"; deb822' "$@"
+exec jq -sR -L"$dir/../jq" 'include "deb822"; deb822_parse' "$@"

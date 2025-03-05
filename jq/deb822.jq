@@ -25,7 +25,7 @@
 #       "Work": "like this"
 #     }
 #   ]
-def deb822:
+def deb822_parse:
 	# normalize CRLF to just LF
 	gsub("\r\n|\r"; "\n")
 
@@ -62,3 +62,7 @@ def deb822:
 		| add
 	)
 ;
+
+# TODO convert the above output back into deb822
+#def deb822_string:
+#;
