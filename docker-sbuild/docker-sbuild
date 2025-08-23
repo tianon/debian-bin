@@ -55,7 +55,7 @@ fi
 uid="$(id -u)"
 gid="$(id -g)"
 cat > "$workdir/Dockerfile" <<-EODF
-	FROM debian:bookworm-slim
+	FROM debian:trixie-slim
 	RUN set -ex; \
 		apt-get update; \
 		apt-get install -y --no-install-recommends \
@@ -67,7 +67,7 @@ cat > "$workdir/Dockerfile" <<-EODF
 		rm -rf /var/lib/apt/lists/*
 	RUN set -eux; \
 		groupadd --gid '$gid' user; \
-		useradd --gid '$gid' --uid '$uid' --groups sbuild user
+		useradd --gid '$gid' --uid '$uid' --groups sbuild --create-home user
 	# schroot is picky about tarball ownership
 	COPY --chown=root:root $tarBase /schroot/
 	COPY schroot.conf /etc/schroot/chroot.d/tar
@@ -113,7 +113,7 @@ args+=(
 	' --
 
 	# set a few defaults (TODO set these differently so we can override them easier)
-	--chroot-mode schroot --chroot tar
+	--chroot-mode schroot --chroot tar # TODO switch to "unshare mode" ? (it uses unprivileged user namespaces, so might actually be *more* annoying than schroot, on the whole)
 	--no-run-lintian
 	--build-dir /target
 
