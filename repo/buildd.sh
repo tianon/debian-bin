@@ -45,7 +45,7 @@ case "$suite" in
 			distro='debian'
 			distroSuite="$suite"
 		elif bashbrew list "https://github.com/docker-library/official-images/raw/HEAD/library/ubuntu:$suite" &> /dev/null; then
-			distr='ubuntu'
+			distro='ubuntu'
 			distroSuite="$suite"
 		else
 			echo >&2 "error: failed to determine what distribution '$suite' belongs to"
