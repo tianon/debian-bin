@@ -19,15 +19,23 @@ def deb822_stream(lines):
 			| .accum = {}
 			| .cur = ""
 		else # TODO should we throw an error if a line contains a newline? (that's bad input)
-			($line | sub("^[ \t]+"; "")) as $ltrim
-			| ($ltrim | sub("[ \t]+$"; "")) as $trim
+			def _trimstart: until(startswith(" ") or startswith("\t") | not; .[1:]);
+			def _trimend: until(endswith(" ") or endswith("\t") | not; .[:-1]);
+			($line | _trimstart) as $ltrim
+			| ($ltrim | _trimend) as $trim
 			| if $ltrim != $line then
 				# TODO what to do here if .cur is empty?? 🫠
 				.accum[.cur] += "\n" + $trim
 			else
 				(
 					$trim
-					| capture("^(?<key>[^:]+?):[ \t]*(?<value>.*)$")
+					| index(":") as $colon
+					| if $colon then
+						{
+							key: .[:$colon],
+							value: (.[$colon+1:] | _trimstart),
+						}
+					else null end
 				) as $parsed
 				| if $parsed then
 					.cur = $parsed.key
