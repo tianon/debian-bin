@@ -12,43 +12,29 @@ def deb822_stream(lines):
 			# ignore comment lines (optional in the spec, but for documents that should not have them they are invalid syntax anyhow so should be fairly harmless to strip unilaterally)
 			startswith("#")
 			| not
+			# TODO consider splitting this into a separate function, like "filter_inline_pgp_noise" ?
 		)
-	) as $line ({ accum: {}, out: {}, cur: "" };
+	) as $line ({ accum: {} };
 		if $line == "" then
-			.out = .accum
-			| .accum = {}
-			| .cur = ""
+			{ out: .accum, accum: {} }
 		else # TODO should we throw an error if a line contains a newline? (that's bad input)
 			def _trimstart: until(startswith(" ") or startswith("\t") | not; .[1:]);
 			def _trimend: until(endswith(" ") or endswith("\t") | not; .[:-1]);
-			($line | _trimstart) as $ltrim
+			del(.out)
+			| ($line | _trimstart) as $ltrim
 			| ($ltrim | _trimend) as $trim
 			| if $ltrim != $line then
-				# TODO what to do here if .cur is empty?? 🫠
 				.accum[.cur] += "\n" + $trim
 			else
-				(
-					$trim
-					| index(":") as $colon
-					| if $colon then
-						{
-							key: .[:$colon],
-							value: (.[$colon+1:] | _trimstart),
-						}
-					else null end
-				) as $parsed
-				| if $parsed then
-					.cur = $parsed.key
-					| .accum[.cur] = $parsed.value
+				($trim | index(":")) as $colon
+				| if $colon then
+					.cur = $trim[:$colon]
+					| .accum[.cur] = ($trim[$colon+1:] | _trimstart)
 				else . end # ignore malformed lines that miss a colon
 			end
-			| .out = {}
 		end
 		;
-		.out
-		| if length > 0 then
-			.
-		else empty end
+		if .out and (.out | length) > 0 then .out else empty end
 	)
 ;
 
