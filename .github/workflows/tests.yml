@@ -29,7 +29,7 @@ jobs:
     name: jq ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: tianon/actions/checkout/composite@581498642ee39d41dc3a801d22b3f7f42a95acc7 # HEAD
       - run: ./jq/t/do.sh
       - run: git diff --exit-code
 
@@ -37,7 +37,7 @@ jobs:
     name: dsc
     runs-on: ubuntu-22.04 # TODO fix reproducibility assumptions around dpkg-buildpackage in dsc.sh
     steps:
-      - uses: actions/checkout@v4
+      - uses: tianon/actions/checkout/composite@581498642ee39d41dc3a801d22b3f7f42a95acc7 # HEAD
       - name: apply dpkg-genbuildinfo workaround
         run: |
           # dpkg-genbuildinfo is very slow on GitHub Actions (likely due to the large number of installed packages); it helps these tests a LOT to skip that for our dpkg-buildpackage invocations
